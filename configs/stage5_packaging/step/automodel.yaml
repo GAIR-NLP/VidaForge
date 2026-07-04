@@ -1,0 +1,20 @@
+defaults:
+  - encoders: wan
+  - _self_
+
+name: automodel
+
+caption_field: caption_level_3
+select_pass: 1
+batch_size: 32
+dynamic_forward_batch_size: 4
+metadata_shard_size: 10000
+replicas: auto
+ray_num_cpus: 1.0
+ray_num_gpus: 1.0
+resume: false
+
+bucket:
+  resolution: 480p
+  upscale: false
+  durations_sec: [2, 3, 4, 5, 6, 8, 10]

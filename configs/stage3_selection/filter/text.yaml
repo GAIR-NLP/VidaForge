@@ -1,0 +1,10 @@
+version: text_v1
+
+model_path: ???
+device: cuda
+
+text_min_confidence: 0.5
+text_ratio_quantile: 0.95
+forward_batch_size: 128
+frame_load_workers: ${step.ray_num_cpus}
+prefetch_batches: 0

@@ -1,0 +1,20 @@
+defaults:
+  - step: step1_context
+  - _self_
+
+input_path: ???
+output_path: ???
+source: ???
+source_batch: ???
+input_run_id: ???
+run_id: ???
+parquet_size: 10000
+ray_address: auto
+limit: null
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false

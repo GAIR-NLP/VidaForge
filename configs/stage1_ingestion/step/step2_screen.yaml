@@ -1,0 +1,24 @@
+name: step2_screen
+
+rules:
+  probe:
+    field: probe_ok
+    equals: 1
+    reject_reason: probe_failed
+
+  short_side:
+    field: short_side
+    min: 360
+    reject_reason: resolution_too_low
+
+  fps:
+    field: fps
+    min: 20.0
+    reject_reason: fps_too_low
+
+  duration:
+    field: duration_sec
+    min: 1.0
+    max: 600.0
+    min_reject_reason: duration_too_short
+    max_reject_reason: duration_too_long

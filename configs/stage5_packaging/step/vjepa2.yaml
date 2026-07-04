@@ -1,0 +1,12 @@
+name: vjepa2
+
+select_pass: 1
+manifest_name: train.csv
+
+duration_sec:
+  min: 4.0
+  max: 10.0
+
+resolution:
+  min: 480p
+  max: 720p

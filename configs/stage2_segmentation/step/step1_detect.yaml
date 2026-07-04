@@ -1,0 +1,17 @@
+defaults:
+  - /detector@detector.content: content
+  - /detector@detector.adaptive: adaptive
+  - /detector@detector.threshold: threshold
+  - /detector@detector.histogram: histogram
+  - /detector@detector.hash: hash
+  - /detector@detector.transnetv2: transnetv2
+  - /detector@detector.uniform: uniform
+  - /detector@detector.random: random
+  - _self_
+
+name: step1_detect
+
+ray_num_cpus: 1.0
+detectors: [adaptive]
+min_len_sec: 1.0
+resume: false

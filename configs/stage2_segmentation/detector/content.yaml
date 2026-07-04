@@ -1,0 +1,6 @@
+threshold: 27.0
+min_len_sec: null
+weights: null
+luma_only: false
+kernel_size: null
+filter_mode: null

@@ -1,0 +1,39 @@
+name: step4_select
+
+filter:
+  filter_ok:
+    equals: 1
+    reject_reason: filter_failed
+
+  optical:
+    min: 0.9
+    reject_reason: low_optical
+
+  motion:
+    min: 0.2
+    reject_reason: low_motion
+
+  aesthetic:
+    min: 0.55
+    reject_reason: low_aesthetic
+
+  text:
+    min: 0.5
+    reject_reason: high_text
+
+dedup:
+  dedup_ok:
+    equals: 1
+    reject_reason: dedup_failed
+
+  pdq:
+    keep_ratio: 1.0
+    min_keep: 1
+    max_keep: 1
+    reject_reason: pdq_duplicate
+
+  cosmos:
+    keep_ratio: 0.2
+    min_keep: 1
+    max_keep: 20
+    reject_reason: cosmos_duplicate

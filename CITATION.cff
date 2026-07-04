@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use VidaForge, please cite it using the metadata below."
+title: "VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab"
+authors:
+  - family-names: Ma
+    given-names: Yan
+  - family-names: Su
+    given-names: Jiadi
+  - family-names: Hu
+    given-names: Zhulin
+  - family-names: Chern
+    given-names: Ethan
+  - family-names: Zhang
+    given-names: Linhao
+  - family-names: Mi
+    given-names: TianTian
+  - family-names: Liu
+    given-names: Pengfei
+year: 2026
+url: "https://github.com/GAIR-NLP/VidaForge"
+type: software
+license: MIT

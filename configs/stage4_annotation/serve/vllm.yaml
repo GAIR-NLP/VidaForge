@@ -1,0 +1,18 @@
+name: vllm
+
+model_path: ???
+model_name: ???
+
+replicas: auto
+tp_size: 1
+ray_num_cpus: 8
+base_port: 8100
+host: 0.0.0.0
+vllm_bin: vllm
+api_key: ${oc.env:OPENAI_API_KEY,EMPTY}
+placement_strategy: STRICT_PACK
+health_poll_interval_sec: 2.0
+extra_args: []
+env: {}
+log_dir: null
+allowed_local_media_path: null

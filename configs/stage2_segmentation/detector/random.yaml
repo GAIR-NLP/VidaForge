@@ -1,0 +1,4 @@
+min_len_sec: ${step.min_len_sec}
+max_len_sec: 10.0
+len_step_sec: 1.0
+seed: 0

@@ -1,0 +1,10 @@
+version: aesthetic_v1
+
+predictor_path: ???
+encoder_path: ???
+
+device: cpu
+dtype: bfloat16
+forward_batch_size: 512
+frame_load_workers: ${step.ray_num_cpus}
+prefetch_batches: 0

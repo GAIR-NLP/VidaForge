@@ -1,0 +1,22 @@
+defaults:
+  - /dedup@deduplicator.pdq: pdq
+  - /dedup@deduplicator.cosmos: cosmos
+  - _self_
+
+name: step3_dedup
+
+deduplicators:
+  - pdq
+
+apply:
+  enabled: true
+  replicas: auto
+  ray_num_cpus: 1.0
+  ray_num_gpus: 0.0
+  batch_size: 128
+
+match:
+  replicas: 1
+  ray_num_cpus: 8.0
+  ray_num_gpus: 0.0
+  batch_size: 10000

@@ -1,0 +1,10 @@
+version: pdq_v1
+
+feature:
+  min_quality: 50.0
+
+match:
+  hamming_distance_threshold: 31
+  min_similar_frame_ratio: 0.8
+  top_k: 50
+  index_backend: faiss_cpu

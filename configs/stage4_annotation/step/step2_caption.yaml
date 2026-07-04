@@ -1,0 +1,26 @@
+defaults:
+  - /serve@serve: vllm
+  - _self_
+
+name: step2_caption
+
+schema_version: caption_v1
+prompt_version: caption_v1
+mode: video_audio # video | video_audio
+resume: false
+
+client:
+  batch_size: 256
+  ray_num_cpus: 1.0
+
+inference:
+  # local = file:// paths on a shared filesystem; base64 = data URLs in request body.
+  media_input: local
+  request_concurrency: 1
+  trust_env: false
+  temperature: 0.0
+  top_p: 1.0
+  presence_penalty: 0.0
+  max_tokens: 4096
+  extra_body: {}
+  store_prompt: false

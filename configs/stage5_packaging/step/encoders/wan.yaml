@@ -1,0 +1,10 @@
+# @package step.encoder
+
+name: wan
+model_name: Wan-AI/Wan2.1-T2V-14B-Diffusers
+device: cuda
+max_sequence_length: 512
+resize_mode: bilinear
+seek_mode: exact
+center_crop: true
+deterministic_latents: true

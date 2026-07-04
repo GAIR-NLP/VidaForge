@@ -1,0 +1,16 @@
+name: step1_context
+
+frame:
+  sampled_fps: 2.0
+  short_side: 384
+  jpeg_qscale: 2
+
+audio:
+  format: m4a
+  sample_rate: 24000
+  channels: 1
+
+ray_num_cpus: 1.0
+batch_size: 4
+resume: false
+ffmpeg_bin: ffmpeg

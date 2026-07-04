@@ -1,0 +1,5 @@
+weights_path: null
+threshold: 0.5
+prediction_mode: single_frame
+device: cpu
+min_len_sec: null

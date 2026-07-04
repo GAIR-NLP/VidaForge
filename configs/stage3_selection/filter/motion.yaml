@@ -1,0 +1,11 @@
+version: motion_v1
+ffmpeg_bin: ffmpeg
+
+vmafmotion:
+  mean_at_score_0_5: 8.0
+
+scdet:
+  threshold: 10.0
+  sample_fps: 8.0
+  sample_width: 320
+  cut_ratio_score_scale: [0.0, 0.05]

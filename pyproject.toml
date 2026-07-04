@@ -1,0 +1,90 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vidaforge"
+version = "0.1.0"
+description = "VidaForge: a video foundation model pretraining data pipeline from raw web videos to training-ready assets."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "debugpy>=1.8.20",
+    "ffmpeg-python>=0.2.0",
+    "qwen-omni-utils>=0.0.9", # !warning: this package with override torch version
+    "ipdb>=0.13.13",
+    "ipython>=9.10.0",
+    "nvitop>=1.6.2",
+    "pre-commit>=4.5.1",
+    "ray[all]>=2.54.0",
+    "rich>=14.3.3",
+    "streamlit>=1.54.0",
+    "tqdm>=4.67.3",
+    "plotly>=6.6.0",
+    "kaleido>=1.2.0",
+    "scenedetect",
+    "opencv-python>=4.13.0.92",
+    "onnxruntime>=1.24.4",
+    "boto3>=1.42.89",
+    "omegaconf>=2.3.0",
+    "hydra-core==1.4.0.dev1",
+    "httpx>=0.28.1",
+    "pydantic>=2.12.5",
+    "openai>=2.37.0",
+    "pytest>=9.0.3",
+    "av>=17.0.1",
+    "aesthetic-predictor-v2-5>=2024.12.18.1",
+    "paddleocr>=3.6.0",
+    "pdqhash>=0.2.8",
+    "faiss-gpu-cuvs>=1.14.1.post1",
+    "einops>=0.8.2",
+    "torch==2.11.0+cu129",
+    "torchvision==0.26.0+cu129",
+    "torchaudio==2.11.0+cu129",
+    "torchcodec",
+    "diffusers>=0.38.0",
+    "ftfy>=6.3.1",
+]
+
+[dependency-groups]
+default = [
+    "transformers>=5.9.0",
+    "vllm==0.20.2+cu129; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "deep-gemm; sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["vidaforge*"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that require external services, model servers, or optional runtime dependencies",
+    "requires_env: tests that require local environment, services, models, or optional packages",
+]
+
+[tool.uv]
+default-groups = ["default"]
+extra-build-dependencies = { deep-gemm = ["torch==2.11.0+cu129", "setuptools>=68", "wheel", "packaging"] }
+extra-build-variables = { deep-gemm = { DG_FORCE_BUILD = "1", DG_USE_LOCAL_VERSION = "1" } }
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
+[tool.uv.sources]
+scenedetect = { git = "https://github.com/Breakthrough/PySceneDetect" }
+
+vllm = { url = "https://github.com/vllm-project/vllm/releases/download/v0.20.2/vllm-0.20.2+cu129-cp38-abi3-manylinux_2_31_x86_64.whl" }
+
+deep-gemm = { git = "https://github.com/deepseek-ai/DeepGEMM.git", rev = "891d57b4db1071624b5c8fa0d1e51cb317fa709f" }
+
+torch = { index = "pytorch-cu129" }
+torchvision = { index = "pytorch-cu129" }
+torchaudio = { index = "pytorch-cu129" }
+torchcodec = { index = "pytorch-cu129" }
+
+
+[[tool.uv.index]]
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
+explicit = true

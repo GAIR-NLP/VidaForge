@@ -1,0 +1,12 @@
+version: cosmos_embed1_v1
+
+feature:
+  model_name: nvidia/Cosmos-Embed1-336p
+  forward_batch_size: 8
+  frame_load_workers: ${step.apply.ray_num_cpus}
+  prefetch_batches: 0
+
+match:
+  min_cosine_similarity: 0.95
+  top_k: 50
+  index_backend: gpu_cuvs

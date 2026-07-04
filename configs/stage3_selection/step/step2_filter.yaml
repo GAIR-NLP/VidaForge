@@ -1,0 +1,18 @@
+defaults:
+  - /filter@filter.optical: optical
+  - /filter@filter.motion: motion
+  - /filter@filter.aesthetic: aesthetic
+  - /filter@filter.text: text
+  - _self_
+
+name: step2_filter
+
+filters:
+  - optical
+  - motion
+
+batch_size: 128
+replicas: auto
+ray_num_cpus: 1.0
+ray_num_gpus: 0.0
+resume: false

@@ -1,0 +1,6 @@
+name: step1_probe
+
+ffprobe_bin: ???
+temp_dir: null
+ray_num_cpus: 1.0
+batch_size: 32

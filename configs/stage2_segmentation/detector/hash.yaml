@@ -1,0 +1,4 @@
+threshold: 0.395
+size: 16
+lowpass: 2
+min_len_sec: null

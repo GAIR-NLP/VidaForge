@@ -1,0 +1,10 @@
+name: step2_clip
+
+min_len_sec: 1.0
+max_len_sec: 10.0
+overlong_split_len_sec: 10.0
+boundary_trim_sec: 0.3
+ray_num_cpus: 1.0
+
+ffmpeg_bin: ffmpeg
+resume: false

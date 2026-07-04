@@ -1,0 +1,17 @@
+name: step3_transcode
+
+target_short_edge: 720
+target_fps: 25
+# x265 quality knob. Lower values produce larger, higher-quality files.
+crf: 23
+# Compatibility pixel format for downstream tools and players.
+pix_fmt: yuv420p
+# Output AAC audio bitrate.
+audio_bitrate: 128k
+ray_num_cpus: 4
+ffmpeg_threads: 4
+
+resume: false
+
+ffmpeg_bin: ???
+ffprobe_bin: ???
