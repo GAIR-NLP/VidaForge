@@ -99,12 +99,11 @@ uv sync
 
 `uv sync` installs VidaForge into the active environment together with the dependencies declared in `pyproject.toml`.
 
-Install system tools separately:
+Install FFmpeg separately. I usually use the prebuilt binaries from [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), such as the 7.1 or 8.1 builds. After downloading and unpacking the archive, the `bin/` directory should contain `ffmpeg` and `ffprobe`.
 
 ```bash
-# Ubuntu / Debian
-sudo apt-get update
-sudo apt-get install -y ffmpeg
+# Example after unpacking a downloaded FFmpeg build.
+export PATH=/path/to/ffmpeg-build/bin:$PATH
 
 # Check that both binaries are visible.
 ffmpeg -version
