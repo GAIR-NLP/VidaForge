@@ -84,7 +84,7 @@ recipe/stage5_packaging.py
 
 ## Installation
 
-VidaForge uses separate environments for the data pipeline and downstream training code. Start with the VidaForge core environment first. This environment is enough for repository imports, stage runners, metadata processing, FFmpeg-based media work, Ray execution, and the default Stage 1/2 smoke path.
+VidaForge uses separate environments for the data pipeline and downstream training code. Start with the VidaForge core environment first. This environment is enough for repository imports, stage runners, metadata processing, and FFmpeg-based media work.
 
 VidaForge currently targets Linux x86_64 with Python 3.11.
 
@@ -109,14 +109,6 @@ export PATH=/path/to/ffmpeg-build/bin:$PATH
 ffmpeg -version
 ffprobe -version
 ```
-
-Start a local Ray runtime before running the stage scripts:
-
-```bash
-ray start --head
-```
-
-The default scripts use `RAY_ADDRESS=auto`, so they will connect to this local Ray runtime. On a cluster, point `RAY_ADDRESS` to the cluster address instead.
 
 Run a quick import check:
 
