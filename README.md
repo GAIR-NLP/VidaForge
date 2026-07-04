@@ -2,20 +2,14 @@
   <img src="assets/background.png" alt="VidaForge cover" width="100%">
 </p>
 
-<h1 align="center">VidaForge</h1>
+<h1 align="center">
+  <img src="assets/logo.png" alt="VidaForge logo" width="72" valign="middle">
+  VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab
+</h1>
 
-<p align="center">
-  <img src="assets/logo.png" alt="VidaForge logo" width="180">
-</p>
-
-<p align="center">
-  <strong>Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab</strong>
-</p>
 
 <p align="center">
   <a href="https://yanmaaaaaa.notion.site/vidaforge">Blog</a>
-  ·
-  <a href="#what-vidaforge-does">Pipeline</a>
   ·
   <a href="#quick-start">Quick Start</a>
   ·
@@ -170,11 +164,11 @@ If you find VidaForge useful, please cite:
 
 ```bibtex
 @misc{ma2026vidaforge,
-  title        = {{VidaForge}: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab},
-  author       = {Ma, Yan and Su, Jiadi and Hu, Zhulin and Chern, Ethan and Zhang, Linhao and Mi, TianTian and Liu, Pengfei},
-  year         = {2026},
-  howpublished = {\url{https://github.com/GAIR-NLP/VidaForge}},
-  note         = {Blog and open-source project}
+    title = {VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab},
+    author = {Ma, Yan and Su, Jiadi and Hu, Zhulin and Chern, Ethan and Zhang, Linhao and Mi, TianTian and Liu, Pengfei},
+    year = {2026},
+    howpublished = {\url{https://yanmaaaaaa.notion.site/vidaforge}},
+    note = {Blog and open-source project}
 }
 ```
 

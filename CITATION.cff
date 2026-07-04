@@ -18,5 +18,27 @@ authors:
     given-names: Pengfei
 year: 2026
 url: "https://github.com/GAIR-NLP/VidaForge"
+repository-code: "https://github.com/GAIR-NLP/VidaForge"
+preferred-citation:
+  type: generic
+  title: "VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab"
+  authors:
+    - family-names: Ma
+      given-names: Yan
+    - family-names: Su
+      given-names: Jiadi
+    - family-names: Hu
+      given-names: Zhulin
+    - family-names: Chern
+      given-names: Ethan
+    - family-names: Zhang
+      given-names: Linhao
+    - family-names: Mi
+      given-names: TianTian
+    - family-names: Liu
+      given-names: Pengfei
+  year: 2026
+  url: "https://yanmaaaaaa.notion.site/vidaforge"
+  notes: "Blog and open-source project"
 type: software
 license: MIT
