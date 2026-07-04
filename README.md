@@ -1,12 +1,51 @@
-# VidaForge
+<p align="center">
+  <img src="assets/background.png" alt="VidaForge cover" width="100%">
+</p>
 
-**Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab**
+<h1 align="center">VidaForge</h1>
 
-VidaForge is a data pipeline for video foundation model pretraining. It turns raw videos into standardized videos, scene-level clips, curated clips, annotated clips, and training-ready datasets for concrete training repositories.
+<p align="center">
+  <img src="assets/logo.png" alt="VidaForge logo" width="180">
+</p>
 
-The project grew out of a practical research need: data recipes should be easy to change, intermediate assets should be inspectable, rejected samples should remain available for analysis, and the final data choice should be testable in real pretraining runs.
+<p align="center">
+  <strong>Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab</strong>
+</p>
 
-Blog: https://yanmaaaaaa.notion.site/vidaforge
+<p align="center">
+  <a href="https://yanmaaaaaa.notion.site/vidaforge">Blog</a>
+  ·
+  <a href="#what-vidaforge-does">Pipeline</a>
+  ·
+  <a href="#quick-start">Quick Start</a>
+  ·
+  <a href="#citation">Citation</a>
+</p>
+
+VidaForge is a research-oriented data pipeline for video foundation model pretraining. It turns raw videos into standardized videos, scene-level clips, curated clips, annotated clips, and training-ready datasets for concrete training repositories.
+
+The project started from a simple frustration: public video foundation model reports often spend less and less space on data processing, even as model quality keeps improving. The data work did not suddenly become trivial. More likely, the most valuable details moved into internal systems.
+
+VidaForge is an attempt to make that part concrete in an academic lab. A data recipe should be easy to change. Intermediate assets should be easy to open and inspect. Rejected samples should stay available for analysis. Most importantly, a data decision should eventually be tested in real pretraining runs, not only in a spreadsheet.
+
+Read the full project story here: https://yanmaaaaaa.notion.site/vidaforge
+
+## Why VidaForge
+
+Video data work is easy to describe vaguely and hard to study carefully. Raw videos come with mixed formats, broken files, variable frame rates, long takes, watermarks, repeated content, low-motion clips, and missing metadata. Once the raw pool gets large, every design choice becomes expensive: when to transcode, when to cut clips, how to keep rejected samples, how to compare selection recipes, and what exact format the training code will read.
+
+VidaForge keeps the pipeline organized around data states:
+
+```text
+raw videos
+  -> standardized videos
+  -> video clips
+  -> curated clips
+  -> annotated clips
+  -> training datasets
+```
+
+This is the main design bias of the project. Each stage leaves something concrete on disk, and the final output has to enter an actual video foundation model training loop.
 
 ## What VidaForge Does
 
