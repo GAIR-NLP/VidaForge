@@ -41,6 +41,14 @@ raw videos
 
 This is the main design bias of the project. Each stage leaves something concrete on disk, and the final output has to enter an actual video foundation model training loop.
 
+<p align="center">
+  <img src="assets/framework.svg" alt="VidaForge three-layer framework" width="100%">
+</p>
+
+<p align="center">
+  <em>VidaForge organizes the pipeline as data states, stage/step units, and execution patterns.</em>
+</p>
+
 ## What VidaForge Does
 
 VidaForge follows a five-stage pipeline:
