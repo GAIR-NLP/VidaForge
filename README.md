@@ -84,7 +84,9 @@ recipe/stage5_packaging.py
 
 ## Installation
 
-VidaForge targets Python 3.11 on Linux.
+VidaForge uses separate environments for the data pipeline and downstream training code. Start with the VidaForge core environment first. This environment is enough for repository imports, stage runners, metadata processing, FFmpeg-based media work, Ray execution, and the default Stage 1/2 smoke path.
+
+VidaForge currently targets Linux x86_64 with Python 3.11.
 
 ```bash
 git clone git@github.com:GAIR-NLP/VidaForge.git
@@ -95,12 +97,44 @@ source .venv/bin/activate
 uv sync
 ```
 
-External tools and model assets are expected to be installed separately:
+`uv sync` installs VidaForge into the active environment together with the dependencies declared in `pyproject.toml`.
 
-- FFmpeg / ffprobe for media probing, transcoding, clipping, and frame extraction.
+Install system tools separately:
+
+```bash
+# Ubuntu / Debian
+sudo apt-get update
+sudo apt-get install -y ffmpeg
+
+# Check that both binaries are visible.
+ffmpeg -version
+ffprobe -version
+```
+
+Start a local Ray runtime before running the stage scripts:
+
+```bash
+ray start --head
+```
+
+The default scripts use `RAY_ADDRESS=auto`, so they will connect to this local Ray runtime. On a cluster, point `RAY_ADDRESS` to the cluster address instead.
+
+Run a quick import check:
+
+```bash
+python - <<'PY'
+import vidaforge
+print("VidaForge import ok")
+PY
+```
+
+Training-side dependencies are installed separately. The NeMo-AutoModel / Wan training path and the official V-JEPA2 training path each have their own environment requirements. Install those only when you are ready to run Stage 5 packaging and downstream training.
+
+Model assets are also prepared separately:
+
 - TransNetV2 weights if you use TransNetV2 scene detection.
-- Aesthetic, OCR/text, Cosmos-Embed, and VLM models if you enable the corresponding Stage 3/4 steps.
-- A Ray runtime if you run the distributed scripts with `RAY_ADDRESS=auto`.
+- Aesthetic, OCR/text, and Cosmos-Embed models if you enable the corresponding Stage 3 steps.
+- A VLM service if you run Stage 4 camera, caption, or tag annotation.
 
 ## Data Directories
 
