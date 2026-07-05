@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Timeline Player</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: linear-gradient(135deg, #08131f 0%, #10283b 45%, #12273a 100%);
+      --panel: rgba(5, 11, 18, 0.84);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text: #f3f7fb;
+      --muted: rgba(243, 247, 251, 0.72);
+      --accent: #ff7a18;
+      --accent-strong: #ff9c4a;
+      --track: rgba(255, 255, 255, 0.16);
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.34);
+      --danger: #ff6b6b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, rgba(255, 122, 24, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(80, 170, 255, 0.16), transparent 24%),
+        var(--bg);
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+    }
+
+    .player-shell {
+      width: min(1100px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(18px);
+    }
+
+    .video-wrap {
+      position: relative;
+      background: #000;
+      aspect-ratio: 16 / 9;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #000;
+    }
+
+    .toolbar {
+      display: grid;
+      gap: 14px;
+      padding: 18px 20px 22px;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      align-items: center;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(5, auto) 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .control-btn {
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #1a120c;
+      font-size: 15px;
+      font-weight: 700;
+      min-width: 98px;
+      padding: 12px 18px;
+      cursor: pointer;
+      transition: transform 0.15s ease, filter 0.15s ease;
+    }
+
+    .control-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    .control-btn:active {
+      transform: translateY(0);
+    }
+
+    .control-btn:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.4) brightness(0.8);
+      transform: none;
+      opacity: 0.65;
+    }
+
+    .timeline-block {
+      display: grid;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .timeline-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .timeline-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-height: 24px;
+    }
+
+    .tick-layer {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 16px;
+      transform: translateY(-50%);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .tick-mark {
+      position: absolute;
+      top: 0;
+      width: 2px;
+      height: 16px;
+      transform: translateX(-1px);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.3);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
+      transition: background 0.15s ease, height 0.15s ease, opacity 0.15s ease;
+      opacity: 0.95;
+    }
+
+    .tick-mark.active {
+      background: rgba(255, 156, 74, 1);
+      height: 20px;
+    }
+
+    .timeline {
+      width: 100%;
+      margin: 0;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(
+        to right,
+        var(--accent) 0%,
+        var(--accent) var(--progress, 0%),
+        var(--track) var(--progress, 0%),
+        var(--track) 100%
+      );
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+
+    .timeline::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 0;
+      height: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .timeline::-moz-range-thumb {
+      width: 0;
+      height: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .status-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      min-width: 86px;
+    }
+
+    .status-pill.error {
+      color: #fff0f0;
+      background: rgba(255, 107, 107, 0.18);
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 14px;
+      }
+
+      .control-row {
+        grid-template-columns: 1fr;
+      }
+
+      .control-btn,
+      .status-pill {
+        width: 100%;
+      }
+
+      .timeline-shell {
+        min-height: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+    <div class="player-shell">
+    <div class="video-wrap">
+      <video id="video" preload="metadata" playsinline>
+        This browser does not support HTML5 video playback.
+      </video>
+    </div>
+
+    <div class="toolbar">
+      <div class="timeline-row">
+        <div class="timeline-block">
+          <div class="timeline-meta">
+            <span id="currentTime">00:00</span>
+            <span id="duration">00:00</span>
+          </div>
+          <div class="timeline-shell">
+            <div id="tickLayer" class="tick-layer"></div>
+            <input id="timeline" class="timeline" type="range" min="0" max="0" value="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <button id="playBtn" class="control-btn" type="button">Play</button>
+        <button id="backwardBtn" class="control-btn" type="button">Back 1s</button>
+        <button id="forwardBtn" class="control-btn" type="button">Forward 1s</button>
+        <button id="prevTickBtn" class="control-btn" type="button">Previous tick</button>
+        <button id="nextTickBtn" class="control-btn" type="button">Next tick</button>
+        <div></div>
+        <div id="status" class="status-pill">Paused</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const bootstrapConfig = window.__PLAYER_CONFIG__ || {};
+    const videoUrl = bootstrapConfig.video ?? window.__PLAYER_VIDEO_URL__ ?? params.get("video");
+    const ticksParam = bootstrapConfig.ticks ?? params.get("ticks");
+    const selectedStartParam = bootstrapConfig.selected_start ?? params.get("selected_start");
+    const selectedEndParam = bootstrapConfig.selected_end ?? params.get("selected_end");
+    const autoplayParam = bootstrapConfig.autoplay ?? params.get("autoplay");
+    const playTokenParam = bootstrapConfig.play_token ?? params.get("play_token");
+    const timelineEndParam = bootstrapConfig.timeline_end ?? params.get("timeline_end");
+
+    const video = document.getElementById("video");
+    const playBtn = document.getElementById("playBtn");
+    const backwardBtn = document.getElementById("backwardBtn");
+    const forwardBtn = document.getElementById("forwardBtn");
+    const prevTickBtn = document.getElementById("prevTickBtn");
+    const nextTickBtn = document.getElementById("nextTickBtn");
+    const timeline = document.getElementById("timeline");
+    const tickLayer = document.getElementById("tickLayer");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationEl = document.getElementById("duration");
+    const statusEl = document.getElementById("status");
+
+    let isScrubbing = false;
+    let resumeAfterScrub = false;
+    let tickPoints = [];
+    let selectedStart = Number.parseFloat(selectedStartParam ?? "");
+    let selectedEnd = Number.parseFloat(selectedEndParam ?? "");
+    let autoplay = autoplayParam === "1";
+    let playToken = Number.parseInt(playTokenParam ?? "0", 10);
+    let metadataTimelineEnd = Number.parseFloat(timelineEndParam ?? "");
+
+    function getTimelineDuration() {
+      if (Number.isFinite(metadataTimelineEnd) && metadataTimelineEnd > 0) {
+        return metadataTimelineEnd;
+      }
+      return video.duration || 0;
+    }
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds) || seconds < 0) {
+        return "00:00";
+      }
+
+      const totalSeconds = Math.floor(seconds);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const secs = totalSeconds % 60;
+
+      if (hours > 0) {
+        return [hours, minutes, secs].map((value) => String(value).padStart(2, "0")).join(":");
+      }
+
+      return [minutes, secs].map((value) => String(value).padStart(2, "0")).join(":");
+    }
+
+    function setStatus(text, isError = false) {
+      statusEl.textContent = text;
+      statusEl.classList.toggle("error", isError);
+    }
+
+    function updateTimelineStyle() {
+      const max = Number(timeline.max) || getTimelineDuration() || 0;
+      const value = Number(timeline.value) || 0;
+      const progress = max > 0 ? (value / max) * 100 : 0;
+      timeline.style.setProperty("--progress", `${progress}%`);
+    }
+
+    function getReferenceTime() {
+      return isScrubbing ? Number(timeline.value) : (video.currentTime || 0);
+    }
+
+    function getCurrentTickIndex(time) {
+      if (tickPoints.length === 0) {
+        return -1;
+      }
+
+      let index = -1;
+      for (let position = 0; position < tickPoints.length; position += 1) {
+        if (tickPoints[position] <= time) {
+          index = position;
+        } else {
+          break;
+        }
+      }
+
+      return index;
+    }
+
+    function renderTickMarks() {
+      tickLayer.innerHTML = "";
+      const duration = getTimelineDuration();
+
+      if (duration <= 0 || tickPoints.length === 0) {
+        prevTickBtn.disabled = true;
+        nextTickBtn.disabled = true;
+        return;
+      }
+
+      tickPoints.forEach((time) => {
+        const tick = document.createElement("span");
+        const position = (time / duration) * 100;
+        tick.className = "tick-mark";
+        tick.style.left = `${position}%`;
+        tick.dataset.time = String(time);
+        if (
+          Number.isFinite(selectedStart) &&
+          Number.isFinite(selectedEnd) &&
+          (Math.abs(time - selectedStart) < 0.05 || Math.abs(time - selectedEnd) < 0.05)
+        ) {
+          tick.classList.add("active");
+        }
+        tickLayer.appendChild(tick);
+      });
+
+      updateTickState();
+    }
+
+    function buildTickPointsFromParams() {
+      if (!ticksParam) {
+        tickPoints = [];
+        renderTickMarks();
+        return false;
+      }
+
+      try {
+        const parsed = Array.isArray(ticksParam) ? ticksParam : JSON.parse(ticksParam);
+        if (!Array.isArray(parsed)) {
+          return false;
+        }
+        tickPoints = [...new Set(parsed
+          .map((value) => Number(value))
+          .filter((value) => Number.isFinite(value) && value >= 0)
+        )].sort((left, right) => left - right);
+        renderTickMarks();
+        return true;
+      } catch (error) {
+        tickPoints = [];
+        renderTickMarks();
+        return false;
+      }
+    }
+
+    function updateTickState() {
+      const current = getReferenceTime();
+      const currentTickIndex = getCurrentTickIndex(current);
+      const ticks = tickLayer.querySelectorAll(".tick-mark");
+
+      ticks.forEach((tick, index) => {
+        tick.classList.toggle("active", index === currentTickIndex);
+      });
+
+      if (tickPoints.length === 0) {
+        prevTickBtn.disabled = true;
+        nextTickBtn.disabled = true;
+        return;
+      }
+
+      if (currentTickIndex < 0) {
+        prevTickBtn.disabled = true;
+        nextTickBtn.disabled = false;
+        return;
+      }
+
+      prevTickBtn.disabled = currentTickIndex === 0;
+      nextTickBtn.disabled = currentTickIndex >= tickPoints.length - 1;
+    }
+
+    function jumpToTime(nextTime) {
+      const actualDuration = video.duration || 0;
+      const duration = actualDuration > 0 ? actualDuration : getTimelineDuration();
+      if (duration <= 0) {
+        return;
+      }
+
+      const boundedTime = Math.min(duration, Math.max(0, nextTime));
+      video.currentTime = boundedTime;
+      timeline.value = boundedTime;
+      currentTimeEl.textContent = formatTime(boundedTime);
+      updateTimelineStyle();
+      updateTickState();
+    }
+
+    function shiftBy(deltaSeconds) {
+      jumpToTime(getReferenceTime() + deltaSeconds);
+    }
+
+    function jumpToAdjacentTick(direction) {
+      const current = getReferenceTime();
+      const currentTickIndex = getCurrentTickIndex(current);
+
+      if (tickPoints.length === 0) {
+        return;
+      }
+
+      if (direction < 0) {
+        if (currentTickIndex <= 0) {
+          return;
+        }
+        jumpToTime(tickPoints[currentTickIndex - 1]);
+        return;
+      }
+
+      const nextIndex = currentTickIndex < 0 ? 0 : currentTickIndex + 1;
+      if (nextIndex >= tickPoints.length) {
+        return;
+      }
+
+      jumpToTime(tickPoints[nextIndex]);
+    }
+
+    function syncUiWithVideo() {
+      if (!isScrubbing) {
+        timeline.value = video.currentTime || 0;
+      }
+
+      currentTimeEl.textContent = formatTime(isScrubbing ? Number(timeline.value) : video.currentTime);
+      durationEl.textContent = formatTime(getTimelineDuration());
+      setStatus(video.paused ? "Paused" : "Playing");
+      playBtn.textContent = video.paused ? "Play" : "Pause";
+      updateTimelineStyle();
+      updateTickState();
+    }
+
+    function applyScrub() {
+      const nextTime = Number(timeline.value);
+      video.currentTime = nextTime;
+      currentTimeEl.textContent = formatTime(nextTime);
+      updateTimelineStyle();
+      updateTickState();
+    }
+
+    function startScrub() {
+      if (isScrubbing) {
+        return;
+      }
+
+      isScrubbing = true;
+      resumeAfterScrub = !video.paused;
+      if (resumeAfterScrub) {
+        video.pause();
+      }
+    }
+
+    function endScrub() {
+      if (!isScrubbing) {
+        return;
+      }
+
+      applyScrub();
+      isScrubbing = false;
+      if (resumeAfterScrub) {
+        video.play().catch(() => {});
+      }
+      resumeAfterScrub = false;
+      syncUiWithVideo();
+    }
+
+    function loadVideo() {
+      if (!videoUrl) {
+        setStatus("Missing video URL", true);
+        return;
+      }
+
+      video.src = videoUrl;
+      video.load();
+    }
+
+    playBtn.addEventListener("click", () => {
+      if (video.paused) {
+        video.play().catch(() => {
+          setStatus("Playback failed", true);
+        });
+      } else {
+        video.pause();
+      }
+    });
+
+    backwardBtn.addEventListener("click", () => {
+      shiftBy(-1);
+    });
+
+    forwardBtn.addEventListener("click", () => {
+      shiftBy(1);
+    });
+
+    prevTickBtn.addEventListener("click", () => {
+      jumpToAdjacentTick(-1);
+    });
+
+    nextTickBtn.addEventListener("click", () => {
+      jumpToAdjacentTick(1);
+    });
+
+    video.addEventListener("click", () => {
+      if (video.paused) {
+        video.play().catch(() => {
+          setStatus("Playback failed", true);
+        });
+      } else {
+        video.pause();
+      }
+    });
+
+    video.addEventListener("loadedmetadata", () => {
+      timeline.max = getTimelineDuration();
+      buildTickPointsFromParams();
+      if (Number.isFinite(selectedStart)) {
+        jumpToTime(selectedStart);
+      }
+      if (autoplay) {
+        video.currentTime = Number.isFinite(selectedStart) ? selectedStart : 0;
+        video.play().catch(() => {
+          setStatus("Playback failed", true);
+        });
+      }
+      syncUiWithVideo();
+    });
+
+    video.addEventListener("timeupdate", syncUiWithVideo);
+    video.addEventListener("play", syncUiWithVideo);
+    video.addEventListener("pause", syncUiWithVideo);
+    video.addEventListener("ended", syncUiWithVideo);
+    video.addEventListener("error", () => {
+      const errorCode = video.error ? video.error.code : "unknown";
+      setStatus(`Load failed(${errorCode})`, true);
+    });
+
+    timeline.addEventListener("pointerdown", startScrub);
+    timeline.addEventListener("touchstart", startScrub, { passive: true });
+    timeline.addEventListener("mousedown", startScrub);
+    timeline.addEventListener("input", () => {
+      if (!isScrubbing) {
+        startScrub();
+      }
+      applyScrub();
+    });
+    timeline.addEventListener("change", endScrub);
+    timeline.addEventListener("pointerup", endScrub);
+    timeline.addEventListener("mouseup", endScrub);
+    timeline.addEventListener("touchend", endScrub);
+
+    syncUiWithVideo();
+    loadVideo();
+  </script>
+</body>
+</html>

@@ -5,11 +5,12 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${REPO_DIR}"
 
-PIPELINE_RUN_ID="${PIPELINE_RUN_ID:-example_run}"
 PIPELINE_TARGETS="${PIPELINE_TARGETS:-${PIPELINE_STEPS:-probe}}"
 
 export DATA_DIR="${DATA_DIR:-/path/to/vidaforge_output}"
 export RAW_DIR="${RAW_DIR:-/path/to/raw_videos}"
+export RUN_ID="${RUN_ID:-example_run}"
+export INPUT_RUN_ID="${INPUT_RUN_ID:-${RUN_ID}}"
 export SOURCE="${SOURCE:-example_source}"
 export SOURCE_BATCH="${SOURCE_BATCH:-default}"
 export VIDEO_LIMIT="${VIDEO_LIMIT:-20000000}"
@@ -28,9 +29,6 @@ if [[ $# -gt 0 ]]; then
   exit 2
 fi
 
-export RUN_ID="${RUN_ID:-${PIPELINE_RUN_ID}}"
-export INPUT_RUN_ID="${INPUT_RUN_ID:-${PIPELINE_RUN_ID}}"
-
 usage() {
   cat <<'EOF'
 Usage:
@@ -46,9 +44,9 @@ Targets:
   all                     run the main pipeline in order, ending with automodel pack
 
 Notes:
-  filter_quality writes step2_filter_quality/run_id_${PIPELINE_RUN_ID}.
+  filter_quality writes step2_filter_quality/run_id_${RUN_ID}.
   filter_aesthetic reads filter_quality and writes step2_filter_aesthetic.
-  filter_text reads filter_aesthetic and writes final step2_filter/run_id_${PIPELINE_RUN_ID}.
+  filter_text reads filter_aesthetic and writes final step2_filter/run_id_${RUN_ID}.
   dedup_pdq reads final step2_filter and writes step3_dedup_pdq.
   dedup_cosmos reads step3_dedup_pdq and writes final step3_dedup.
   pack reads step3_tag and writes stage5_packaging/automodel.
@@ -57,7 +55,7 @@ EOF
 }
 
 print_step() {
-  echo "pipeline_run_id=${PIPELINE_RUN_ID}"
+  echo "run_id=${RUN_ID}"
   echo "target=${PIPELINE_TARGETS}"
   echo "step=$1"
 }
@@ -118,8 +116,8 @@ run_context() {
 }
 
 run_filter_quality() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step1_context/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter_quality/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step1_context/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter_quality/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step2_filter_quality"
   bash scripts/stage3_selection/run_step2_filter.sh \
@@ -133,8 +131,8 @@ run_filter_quality() {
 }
 
 run_filter_aesthetic() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter_quality/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter_aesthetic/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter_quality/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter_aesthetic/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step2_filter_aesthetic"
   bash scripts/stage3_selection/run_step2_filter.sh \
@@ -153,8 +151,8 @@ run_filter_aesthetic() {
 }
 
 run_filter_text() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter_aesthetic/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter_aesthetic/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step2_filter/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step2_filter"
   bash scripts/stage3_selection/run_step2_filter.sh \
@@ -172,8 +170,8 @@ run_filter_text() {
 }
 
 run_dedup_pdq() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step3_dedup_pdq/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step2_filter/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step3_dedup_pdq/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step3_dedup_pdq"
   bash scripts/stage3_selection/run_step3_dedup.sh \
@@ -193,8 +191,8 @@ run_dedup_pdq() {
 }
 
 run_dedup_cosmos() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step3_dedup_pdq/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step3_dedup/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step3_dedup_pdq/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step3_dedup/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step3_dedup_cosmos"
   bash scripts/stage3_selection/run_step3_dedup.sh \
@@ -219,8 +217,8 @@ run_dedup_cosmos() {
 }
 
 run_select() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step3_dedup/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage3_selection/step4_select/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step3_dedup/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage3_selection/step4_select/run_id_${RUN_ID}"
 
   print_step "stage3_selection/step4_select"
   bash scripts/stage3_selection/run_step4_select.sh \
@@ -242,8 +240,8 @@ run_select() {
 }
 
 run_camera() {
-  local input_path="${DATA_DIR}/meta/stage3_selection/step4_select/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage4_annotation/step1_camera/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage3_selection/step4_select/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage4_annotation/step1_camera/run_id_${RUN_ID}"
 
   print_step "stage4_annotation/step1_camera"
   bash scripts/stage4_annotation/run_step1_camera.sh \
@@ -266,8 +264,8 @@ run_camera() {
 }
 
 run_caption() {
-  local input_path="${DATA_DIR}/meta/stage4_annotation/step1_camera/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage4_annotation/step2_caption/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step1_camera/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage4_annotation/step2_caption/run_id_${RUN_ID}"
 
   print_step "stage4_annotation/step2_caption"
   bash scripts/stage4_annotation/run_step2_caption.sh \
@@ -291,8 +289,8 @@ run_caption() {
 }
 
 run_tag() {
-  local input_path="${DATA_DIR}/meta/stage4_annotation/step2_caption/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step2_caption/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}"
 
   print_step "stage4_annotation/step3_tag"
   bash scripts/stage4_annotation/run_step3_tag.sh \
@@ -315,8 +313,8 @@ run_tag() {
 }
 
 run_pack_automodel_wan() {
-  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/data/stage5_packaging/automodel/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/data/stage5_packaging/automodel/run_id_${RUN_ID}"
 
   print_step "stage5_packaging/automodel"
   bash scripts/stage5_packaging/run_automodel.sh \
@@ -336,8 +334,8 @@ run_pack_automodel_wan() {
 }
 
 run_pack_vjepa2() {
-  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${PIPELINE_RUN_ID}"
-  local output_path="${DATA_DIR}/data/stage5_packaging/vjepa2/run_id_${PIPELINE_RUN_ID}"
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/data/stage5_packaging/vjepa2/run_id_${RUN_ID}"
 
   print_step "stage5_packaging/vjepa2"
   bash scripts/stage5_packaging/run_vjepa2.sh \
