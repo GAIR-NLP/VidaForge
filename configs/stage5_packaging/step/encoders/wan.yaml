@@ -1,7 +1,7 @@
 # @package step.encoder
 
 name: wan
-model_name: Wan-AI/Wan2.1-T2V-14B-Diffusers
+model_name: Wan-AI/Wan2.1-T2V-1.3B-Diffusers
 device: cuda
 max_sequence_length: 512
 resize_mode: bilinear

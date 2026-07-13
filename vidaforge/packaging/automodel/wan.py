@@ -23,7 +23,7 @@ MAX_TEMPORAL_REPEAT_PAD_FRAMES = 1
 
 @dataclass(frozen=True, slots=True)
 class WanEncoderConfig:
-    model_name: str | Path = "Wan-AI/Wan2.1-T2V-14B-Diffusers"
+    model_name: str | Path = "Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
     device: str = "cuda"
     max_sequence_length: int = 512
     resize_mode: str = "bilinear"
@@ -41,7 +41,7 @@ class WanAutoModelEncoder:
     def __init__(
         self,
         *,
-        model_name: str | Path = "Wan-AI/Wan2.1-T2V-14B-Diffusers",
+        model_name: str | Path = "Wan-AI/Wan2.1-T2V-1.3B-Diffusers",
         device: str = "cuda",
         max_sequence_length: int = 512,
         resize_mode: str = "bilinear",
