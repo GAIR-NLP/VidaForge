@@ -22,7 +22,7 @@ dependencies = [
     "tqdm>=4.67.3",
     "plotly>=6.6.0",
     "kaleido>=1.2.0",
-    "scenedetect",
+    "scenedetect-core",
     "opencv-python>=4.13.0.92",
     "onnxruntime>=1.24.4",
     "boto3>=1.42.89",
@@ -72,7 +72,7 @@ environments = [
 ]
 
 [tool.uv.sources]
-scenedetect = { git = "https://github.com/Breakthrough/PySceneDetect" }
+scenedetect-core = { git = "https://github.com/Breakthrough/PySceneDetect" }
 
 vllm = { url = "https://github.com/vllm-project/vllm/releases/download/v0.20.2/vllm-0.20.2+cu129-cp38-abi3-manylinux_2_31_x86_64.whl" }
 

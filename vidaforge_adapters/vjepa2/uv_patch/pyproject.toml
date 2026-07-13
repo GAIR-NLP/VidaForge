@@ -1,0 +1,49 @@
+[project]
+name = "vjepa2-uv-env"
+version = "0.0.0"
+description = "Local uv environment definition for V-JEPA2 training and VidaForge V-JEPA2 adapters."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "torch==2.11.0+cu129",
+    "torchvision==0.26.0+cu129",
+    "torchcodec",
+    "tensorboard",
+    "wandb",
+    "iopath",
+    "pyyaml",
+    "numpy",
+    "opencv-python",
+    "omegaconf>=2.3.0",
+    "submitit",
+    "braceexpand",
+    "webdataset",
+    "timm",
+    "transformers",
+    "peft",
+    "decord>=0.6.0",
+    "pandas",
+    "einops",
+    "beartype",
+    "psutil",
+    "h5py",
+    "fire",
+    "python-box",
+    "scikit-image",
+    "ftfy",
+    "jupyter",
+]
+
+[tool.uv]
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu129" }
+torchvision = { index = "pytorch-cu129" }
+torchcodec = { index = "pytorch-cu129" }
+
+[[tool.uv.index]]
+name = "pytorch-cu129"
+url = "https://download.pytorch.org/whl/cu129"
+explicit = true
