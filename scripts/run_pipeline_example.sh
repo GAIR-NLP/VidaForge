@@ -40,7 +40,7 @@ Targets:
   context, filter_quality, filter_aesthetic, filter_text
   dedup, dedup_pdq, dedup_cosmos, select
   camera, caption, tag
-  pack, automodel, automodel_wan, vjepa2
+  pack_automodel_wan, pack_vjepa2
   all                     run the main pipeline in order, ending with automodel pack
 
 Notes:
@@ -49,8 +49,8 @@ Notes:
   filter_text reads filter_aesthetic and writes final step2_filter/run_id_${RUN_ID}.
   dedup_pdq reads final step2_filter and writes step3_dedup_pdq.
   dedup_cosmos reads step3_dedup_pdq and writes final step3_dedup.
-  pack reads step3_tag and writes stage5_packaging/automodel.
-  vjepa2 is an optional Stage 5 exporter; it reads step3_tag and writes stage5_packaging/vjepa2.
+  pack_automodel_wan reads step3_tag and writes stage5_packaging/automodel.
+  pack_vjepa2 is an optional Stage 5 target; it reads step3_tag and writes stage5_packaging/vjepa2.
 EOF
 }
 
@@ -326,7 +326,7 @@ run_pack_automodel_wan() {
     step.replicas=auto \
     step.ray_num_cpus=8 \
     step.ray_num_gpus=1 \
-    step.select_pass=null \
+    step.select_pass=1 \
     step.caption_field=caption_level_3 \
     step.dynamic_forward_batch_size=4 \
     step.metadata_shard_size="${PARQUET_SIZE}" \
@@ -374,59 +374,59 @@ run_step() {
   shift
 
   case "${step}" in
-    probe|stage1_probe|step1_probe|stage1_step1_probe)
+    probe)
       run_probe
       ;;
-    screen|stage1_screen|step2_screen|stage1_step2_screen)
+    screen)
       run_screen
       ;;
-    transcode|stage1_transcode|step3_transcode|stage1_step3_transcode)
+    transcode)
       run_transcode
       ;;
-    detect|stage2_detect|step1_detect|stage2_step1_detect)
+    detect)
       run_detect
       ;;
-    clip|stage2_clip|step2_clip|stage2_step2_clip)
+    clip)
       run_clip
       ;;
-    context|stage3_context|step1_context|stage3_step1_context)
+    context)
       run_context
       ;;
-    filter_quality|stage3_filter_quality|step2_filter_quality|stage3_step2_filter_quality)
+    filter_quality)
       run_filter_quality
       ;;
-    filter_aesthetic|stage3_filter_aesthetic)
+    filter_aesthetic)
       run_filter_aesthetic
       ;;
-    filter_text|stage3_filter_text)
+    filter_text)
       run_filter_text
       ;;
-    dedup|stage3_dedup|step3_dedup|stage3_step3_dedup)
+    dedup)
       run_dedup_pdq
       run_dedup_cosmos
       ;;
-    dedup_pdq|stage3_dedup_pdq)
+    dedup_pdq)
       run_dedup_pdq
       ;;
-    dedup_cosmos|stage3_dedup_cosmos)
+    dedup_cosmos)
       run_dedup_cosmos
       ;;
-    select|stage3_select|step4_select|stage3_step4_select)
+    select)
       run_select
       ;;
-    camera|stage4_camera|step1_camera|stage4_step1_camera)
+    camera)
       run_camera
       ;;
-    caption|stage4_caption|step2_caption|stage4_step2_caption)
+    caption)
       run_caption
       ;;
-    tag|stage4_tag|step3_tag|stage4_step3_tag)
+    tag)
       run_tag
       ;;
-    pack|automodel|automodel_wan|stage5_pack|stage5_automodel|stage5_automodel_wan)
+    pack_automodel_wan)
       run_pack_automodel_wan
       ;;
-    vjepa2|pack_vjepa2|stage5_vjepa2|stage5_pack_vjepa2)
+    pack_vjepa2)
       run_pack_vjepa2
       ;;
     all)

@@ -1474,14 +1474,148 @@ Then inspect a few output rows:
 
 </details>
 
-### 14. Stage 5 Packaging
+### 14. Run Stage 5: Package Data for NeMo-AutoModel / Wan
 
 <details>
 <summary></summary>
 
-TODO: add a step-by-step guide for dataset packaging.
+This packaging path reads the clip records produced by Stage 4 and converts them into the tensor cache consumed by the VidaForge NeMo-AutoModel dataloader. It reads each clip with TorchCodec, assigns a temporal and spatial bucket, and uses the Wan VAE and text encoder to generate video latents and text embeddings.
 
-This section will cover how VidaForge turns processed clips and metadata into concrete dataset formats for downstream training repositories. The current codebase includes packaging paths for NeMo-AutoModel / Wan and the official V-JEPA2 training repository, but the open-source quick-start documentation is still being prepared.
+By default, the quick start packages clips with `select_pass=1` and uses `caption_level_3` as the training text. Each output `.meta` file contains the tensors and metadata required by the training dataloader.
+
+The step config is split across:
+
+```text
+configs/stage5_packaging/step/automodel.yaml
+configs/stage5_packaging/step/encoders/wan.yaml
+```
+
+The main settings are:
+
+```yaml
+caption_field: caption_level_3
+select_pass: 1
+
+bucket:
+  resolution: 480p
+  upscale: false
+  durations_sec: [2, 3, 4, 5, 6, 8, 10]
+
+encoder:
+  model_name: Wan-AI/Wan2.1-T2V-1.3B-Diffusers
+```
+
+- `caption_field`: caption field encoded as the training text.
+- `select_pass`: `1` packages selected clips, `0` packages rejected clips, and `null` packages both.
+- `bucket.resolution`: spatial pixel budget used to assign a training resolution bucket while preserving the clip aspect ratio.
+- `bucket.upscale`: whether clips below the target pixel budget may be enlarged.
+- `bucket.durations_sec`: temporal buckets available to the packer.
+- `batch_size`: number of clip rows sent to one Ray actor at a time.
+- `dynamic_forward_batch_size`: reference encoder batch size. The actual forward batch is reduced for buckets with more frames or pixels.
+- `replicas`, `ray_num_cpus`, and `ray_num_gpus`: number of resident encoder actors and the resources reserved for each actor.
+- `encoder.model_name`: Hugging Face model ID or local path for the Wan Diffusers checkpoint.
+
+This step requires a Ray runtime with GPU resources. The Wan VAE, text encoder, and tokenizer stay loaded inside each actor while it processes multiple batches.
+
+The quick-start function is:
+
+```bash
+run_pack_automodel_wan() {
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/data/stage5_packaging/automodel/run_id_${RUN_ID}"
+
+  print_step "stage5_packaging/automodel"
+  bash scripts/stage5_packaging/run_automodel.sh \
+    input_path="${input_path}" \
+    output_path="${output_path}" \
+    limit="${CLIP_LIMIT}" \
+    step.resume=true \
+    step.batch_size=32 \
+    step.replicas=auto \
+    step.ray_num_cpus=8 \
+    step.ray_num_gpus=1 \
+    step.select_pass=1 \
+    step.caption_field=caption_level_3 \
+    step.dynamic_forward_batch_size=4 \
+    step.metadata_shard_size="${PARQUET_SIZE}" \
+    step.encoder.model_name="Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
+}
+```
+
+Run it after Tag:
+
+```bash
+bash scripts/run_pipeline_example.sh pack_automodel_wan
+```
+
+The default input is:
+
+```text
+DATA_DIR/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}/
+```
+
+The packed dataset is written to:
+
+```text
+DATA_DIR/data/stage5_packaging/automodel/run_id_${RUN_ID}/
+```
+
+The output has this layout:
+
+```text
+run_id_<RUN_ID>/
+├── <frames>f/<resolution>/<hash>/<hash>/*.meta
+├── clip-*.parquet
+├── metadata.json
+├── shards/metadata-*.json
+└── summary.json
+```
+
+Each `.meta` file stores the video latent, text embedding, bucket information, clip identity, caption, and source clip path. `metadata.json` points the training dataloader to the JSON metadata shards, and the Parquet rows preserve the full Stage 5 processing status.
+
+Check `summary.json` first:
+
+- `source_count`: clip rows found in the Stage 4 input.
+- `input_count`: clip rows sent to the packaging actors after the caption and selection filters.
+- `resumed_count`: rows skipped because their `.meta` files were already complete.
+- `packed_count`: usable `.meta` files included in the final dataset metadata.
+- `failed_count`: rows that failed during video reading or encoding.
+- `bucket_frame_count_distribution`: packed clips grouped by temporal bucket.
+- `bucket_resolution_distribution`: packed clips grouped by spatial bucket.
+- `caption_token_truncated_count`: captions longer than the configured tokenizer limit.
+
+#### Optional: Create Train and Validation Subsets
+
+When `step.select_pass=1`, the packed output contains only selected clips. It can be used directly for training, or split into selected training and validation sets.
+
+Set `step.select_pass=null` when you want to compare different selection results. The packed metadata will then retain both selected and rejected clips. `split_packed_dataset.py` can sample selected, rejected, or mixed subsets with a fixed random seed. It also prevents clips from the same source video from appearing in both training and validation sets.
+
+For example, this command creates a mixed training set and a selected validation set:
+
+```bash
+python -m vidaforge_adapters.automodel.tools.split_packed_dataset \
+  --input-dir /path/to/stage5_automodel_output \
+  --output-dir /path/to/dataset_splits \
+  --train-name mixed_train \
+  --train-component select_pass=1,count=500 \
+  --train-component select_pass=0,count=500 \
+  --val-name selected_valid \
+  --val-component select_pass=1,count=100 \
+  --seed 42
+```
+
+The split operation reuses the existing `.meta` files. It writes new Parquet metadata, `metadata.json`, `clip_ids.txt`, `video_ids.txt`, and `summary.json`, so the Wan latents and text embeddings do not need to be computed again.
+
+The official V-JEPA2 packaging path is documented next.
+
+</details>
+
+### 15. Stage 5 Packaging for V-JEPA2
+
+<details>
+<summary></summary>
+
+TODO: add the step-by-step guide for the official V-JEPA2 packaging path.
 
 </details>
 
@@ -1518,7 +1652,7 @@ Camera, caption, and tag are separate steps. Camera records camera motion and sc
 
 ### Stage 5: Packaging
 
-Packaging bridges processed clips and metadata to concrete training repositories. Detailed quick-start docs for the current NeMo-AutoModel / Wan and official V-JEPA2 packaging paths are TODO.
+Packaging bridges processed clips and metadata to concrete training repositories. The quick start above documents the current NeMo-AutoModel / Wan path. Documentation for the official V-JEPA2 packaging path is still being prepared.
 
 ## Citation
 
