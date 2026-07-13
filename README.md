@@ -94,10 +94,8 @@ cd VidaForge
 
 uv venv .venv --python 3.11
 source .venv/bin/activate
-uv sync
+uv sync --prerelease=allow
 ```
-
-`uv sync` installs VidaForge into the active environment together with the dependencies declared in `pyproject.toml`.
 
 Install FFmpeg separately. I usually use the prebuilt binaries from [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds), such as the 7.1 or 8.1 builds. After downloading and unpacking the archive, the `bin/` directory should contain `ffmpeg` and `ffprobe`.
 
