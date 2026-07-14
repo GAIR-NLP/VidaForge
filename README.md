@@ -89,7 +89,7 @@ VidaForge uses separate environments for the data pipeline and downstream traini
 VidaForge currently targets Linux x86_64 with Python 3.11.
 
 ```bash
-git clone git@github.com:GAIR-NLP/VidaForge.git
+git clone https://github.com/GAIR-NLP/VidaForge.git
 cd VidaForge
 
 uv venv .venv --python 3.11
