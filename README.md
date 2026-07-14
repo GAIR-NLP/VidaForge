@@ -1584,11 +1584,122 @@ Check `summary.json` first:
 - `bucket_resolution_distribution`: packed clips grouped by spatial bucket.
 - `caption_token_truncated_count`: captions longer than the configured tokenizer limit.
 
-#### Optional: Create Train and Validation Subsets
+The official V-JEPA2 packaging path is documented next. The optional shared-split workflow after both packaging sections shows how to use identical clip IDs across training repositories.
 
-When `step.select_pass=1`, the packed output contains only selected clips. It can be used directly for training, or split into selected training and validation sets.
+</details>
 
-Set `step.select_pass=null` when you want to compare different selection results. The packed metadata will then retain both selected and rejected clips. `split_packed_dataset.py` can sample selected, rejected, or mixed subsets with a fixed random seed. It also prevents clips from the same source video from appearing in both training and validation sets.
+### 15. Run Stage 5: Package Data for V-JEPA2
+
+<details>
+<summary></summary>
+
+The official V-JEPA2 `VideoDataset` expects each manifest line to contain an absolute clip path and a label. V-JEPA2 self-supervised pretraining does not use this label as a training target, so VidaForge writes `0` for every clip:
+
+```text
+/absolute/path/to/clip_a.mp4 0
+/absolute/path/to/clip_b.mp4 0
+```
+
+This Stage 5 path reads the Stage 4 Tag metadata, applies the requested selection, duration, and resolution constraints, and writes a manifest that the official V-JEPA2 `VideoDataset` can read directly. It also writes Parquet metadata for inspecting the exact clips included in the manifest. The original clip files stay in place; this step only writes the training manifest and its accompanying metadata.
+
+The step config is:
+
+```text
+configs/stage5_packaging/step/vjepa2.yaml
+```
+
+The main settings are:
+
+- `step.select_pass`: use `1` for selected clips, `0` for rejected clips, or `null` to include both.
+- `step.duration_sec.min` and `step.duration_sec.max`: allowed clip duration range in seconds.
+- `step.resolution.min` and `step.resolution.max`: allowed source-resolution range, expressed as a 16:9-equivalent pixel budget such as `256p` or `1080p`.
+- `step.manifest_name`: output manifest filename. VidaForge uses the `.csv` suffix for the official V-JEPA2 `VideoDataset` manifest.
+
+In `scripts/run_pipeline_example.sh`, the quick-start function is:
+
+```bash
+run_pack_vjepa2() {
+  local input_path="${DATA_DIR}/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}"
+  local output_path="${DATA_DIR}/data/stage5_packaging/vjepa2/run_id_${RUN_ID}"
+
+  print_step "stage5_packaging/vjepa2"
+  bash scripts/stage5_packaging/run_vjepa2.sh \
+    input_path="${input_path}" \
+    output_path="${output_path}" \
+    limit="${CLIP_LIMIT}" \
+    step.select_pass=1 \
+    step.duration_sec.min=2.0 \
+    step.duration_sec.max=10.0 \
+    step.resolution.min=256p \
+    step.resolution.max=1080p \
+    step.manifest_name=train.csv
+}
+```
+
+The quick-start values package selected clips between 2 and 10 seconds, with source resolution between the configured `256p` and `1080p` pixel budgets. Change these overrides when the V-JEPA2 training recipe uses a different clip pool.
+
+Run it after Tag:
+
+```bash
+bash scripts/run_pipeline_example.sh pack_vjepa2
+```
+
+The default input is:
+
+```text
+DATA_DIR/meta/stage4_annotation/step3_tag/run_id_${RUN_ID}/
+```
+
+The V-JEPA2 training input is written to:
+
+```text
+DATA_DIR/data/stage5_packaging/vjepa2/run_id_${RUN_ID}/
+```
+
+The output has this layout:
+
+```text
+run_id_<RUN_ID>/
+├── train.csv
+├── clip-*.parquet
+└── summary.json
+```
+
+`train.csv` contains one absolute clip path and label per line. VidaForge uses label `0` for video pretraining. Each Parquet row inherits the upstream clip metadata and adds `vjepa2_ok`, `vjepa2_video_path`, and `vjepa2_manifest_path`.
+
+Check `summary.json` first:
+
+- `source_count`: clip rows found in the Stage 4 input.
+- `output_count`: clips written to `train.csv` after all constraints.
+- `rejected_count`: rows skipped by selection, duration, or resolution constraints.
+- `reject_reason_counts`: skipped rows grouped by the exact constraint they failed.
+- `source_resolution_distribution`: source resolutions of the exported clips.
+- `select_pass_distribution`: selected and rejected composition of the exported clips.
+
+The V-JEPA2 environment and downstream training command are documented separately from the pipeline quick start.
+
+</details>
+
+### 16. Optional: Use the Same Clips Across Training Repositories
+
+<details>
+<summary></summary>
+
+The two packaging paths above can run independently. For a controlled comparison across training repositories, this workflow keeps the train and validation clip IDs identical.
+
+First, package the AutoModel dataset with `step.select_pass=null` so the metadata retains both selected and rejected clips. In `run_pack_automodel_wan()`, change the selection override to:
+
+```bash
+step.select_pass=null \
+```
+
+Then run:
+
+```bash
+bash scripts/run_pipeline_example.sh pack_automodel_wan
+```
+
+Next, use `split_packed_dataset.py` to construct the required training and validation subsets. The tool samples with a fixed random seed and prevents clips from the same source video from appearing in both splits.
 
 For example, this command creates a mixed training set and a selected validation set:
 
@@ -1604,18 +1715,18 @@ python -m vidaforge_adapters.automodel.tools.split_packed_dataset \
   --seed 42
 ```
 
-The split operation reuses the existing `.meta` files. It writes new Parquet metadata, `metadata.json`, `clip_ids.txt`, `video_ids.txt`, and `summary.json`, so the Wan latents and text embeddings do not need to be computed again.
+Each split reuses the existing `.meta` files and writes its own Parquet metadata, `metadata.json`, `clip_ids.txt`, `video_ids.txt`, and `summary.json`. The Wan latents and text embeddings do not need to be computed again.
 
-The official V-JEPA2 packaging path is documented next.
+Finally, create a V-JEPA2 manifest from the same clip IDs:
 
-</details>
+```bash
+python -m vidaforge_adapters.vjepa2.tools.make_manifest_from_automodel_split \
+  --automodel-dir /path/to/dataset_splits/mixed_train \
+  --output-dir /path/to/vjepa2_splits/mixed_train \
+  --check-files
+```
 
-### 15. Stage 5 Packaging for V-JEPA2
-
-<details>
-<summary></summary>
-
-TODO: add the step-by-step guide for the official V-JEPA2 packaging path.
+The conversion reads `clip_ids.txt` and the split metadata, resolves each original `clip_path`, and writes `train.csv`, `clip-*.parquet`, `clip_ids.txt`, and `summary.json`. Repeat the command for the validation split. Both training repositories can then use the same train and validation clips while keeping their required input formats.
 
 </details>
 
@@ -1652,7 +1763,7 @@ Camera, caption, and tag are separate steps. Camera records camera motion and sc
 
 ### Stage 5: Packaging
 
-Packaging bridges processed clips and metadata to concrete training repositories. The quick start above documents the current NeMo-AutoModel / Wan path. Documentation for the official V-JEPA2 packaging path is still being prepared.
+Packaging bridges processed clips and metadata to concrete training repositories. The quick start above covers tensor-cache packaging for NeMo-AutoModel / Wan and manifest packaging for the official V-JEPA2 training repository.
 
 ## Citation
 
