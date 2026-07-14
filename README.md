@@ -1730,6 +1730,350 @@ The conversion reads `clip_ids.txt` and the split metadata, resolves each origin
 
 </details>
 
+## Downstream Training
+
+Stage 5 packaging runs in the VidaForge core environment. Downstream training uses separate environments for NeMo-AutoModel and the official V-JEPA2 repository because the two training codebases have their own dependency stacks. Install only the environment required by the model you want to train.
+
+### Train Wan2.1-1.3B with NeMo-AutoModel
+
+<details>
+<summary></summary>
+
+#### Install the Training Environment
+
+Clone the official [NeMo-AutoModel](https://github.com/NVIDIA-NeMo/Automodel) repository. Keep the checkout outside VidaForge, and create its training environment under the VidaForge repository:
+
+```bash
+REPO_DIR=/path/to/VidaForge
+AUTOMODEL_DIR=/path/to/Automodel
+
+cd "${REPO_DIR}"
+
+uv venv .venv-automodel --python 3.12
+source .venv-automodel/bin/activate
+
+uv sync --active --frozen --no-install-project \
+  --project "${REPO_DIR}/vidaforge_adapters/automodel/uv_patch"
+
+uv pip install --no-deps -e "${AUTOMODEL_DIR}"
+uv pip install --no-deps -e "${REPO_DIR}"
+```
+
+The first editable install adds NeMo-AutoModel to the environment. The second adds the VidaForge dataloader and training adapter without reinstalling the core pipeline dependencies.
+
+Verify the environment before launching training:
+
+```bash
+python -c "import nemo_automodel; import vidaforge_adapters.automodel; print('ok')"
+```
+
+#### Prepare the Training Input
+
+`CACHE_DIR` points to a Stage 5 AutoModel dataset. The directory must contain `metadata.json`, its JSON metadata shards, and the `.meta` tensor-cache files referenced by those shards.
+
+For a normal Stage 5 run:
+
+```bash
+CACHE_DIR="${DATA_DIR}/data/stage5_packaging/automodel/run_id_${RUN_ID}"
+```
+
+If you created train and validation subsets in Section 16, point `CACHE_DIR` to one of those split directories:
+
+```bash
+CACHE_DIR=/path/to/dataset_splits/mixed_train
+```
+
+The training script also needs the Wan2.1-T2V-1.3B Diffusers checkpoint and a directory for training checkpoints:
+
+```bash
+MODEL_PATH=/path/to/Wan2.1-T2V-1.3B-Diffusers
+CHECKPOINT_DIR=/path/to/checkpoints
+```
+
+`CHECKPOINT_DIR` is the parent directory. The training script creates a subdirectory using `RUN_NAME`.
+
+#### Launch Training
+
+Activate the AutoModel environment and launch training from the VidaForge repository. The example below uses one node with eight GPUs:
+
+```bash
+cd "${REPO_DIR}"
+source .venv-automodel/bin/activate
+
+CACHE_DIR=/path/to/stage5_automodel_dataset \
+MODEL_PATH=/path/to/Wan2.1-T2V-1.3B-Diffusers \
+CHECKPOINT_DIR=/path/to/checkpoints \
+RUN_NAME=wan2_1_t2v_example \
+NNODES=1 \
+NODE_RANK=0 \
+NPROC_PER_NODE=8 \
+GLOBAL_BATCH_SIZE=32 \
+LOCAL_BATCH_SIZE=1 \
+NUM_EPOCHS=1 \
+bash vidaforge_adapters/automodel/run.sh
+```
+
+The main training settings are:
+
+- `NNODES`: total number of training nodes.
+- `NODE_RANK`: rank of the current node, starting from `0`.
+- `NPROC_PER_NODE`: number of GPUs used on each node.
+- `GLOBAL_BATCH_SIZE`: batch size across all nodes and GPUs.
+- `LOCAL_BATCH_SIZE`: number of samples processed by each training process at once.
+- `NUM_EPOCHS`: number of complete passes over the training dataset.
+
+`run.sh` loads `vidaforge_adapters/automodel/configs/wan2_1_t2v_flow.yaml`, starts `torchrun`, and connects NeMo-AutoModel to the VidaForge bucket-aware dataloader.
+
+For multi-node training, run the same command on every node with a shared `MASTER_ADDR` and `MASTER_PORT`, set `NNODES` to the total node count, and assign a different `NODE_RANK` to each node.
+
+#### Evaluate Validation Loss
+
+Prepare the validation dataset with the same Stage 5 AutoModel packaging format. `VALID_CACHE_DIR` must contain its own `metadata.json`, JSON metadata shards, and `.meta` tensor-cache files.
+
+The training command writes checkpoints under `<CHECKPOINT_DIR>/<RUN_NAME>`. Pass that run-specific directory to the evaluation script:
+
+```bash
+MODEL_PATH=/path/to/Wan2.1-T2V-1.3B-Diffusers \
+VALID_CACHE_DIR=/path/to/validation_cache \
+CHECKPOINT_DIR=/path/to/checkpoints/wan2_1_t2v_example \
+NNODES=1 \
+NODE_RANK=0 \
+NPROC_PER_NODE=8 \
+bash vidaforge_adapters/automodel/run_eval.sh
+```
+
+`run_eval.sh` evaluates every `epoch_*_step_*` checkpoint found under `CHECKPOINT_DIR`. Existing result files are skipped, so an interrupted evaluation run can continue. Results are written under:
+
+```text
+CHECKPOINT_DIR/eval/
+```
+
+Each JSON file records the mean validation loss, evaluated sample and batch counts, checkpoint name, and validation cache path. For a quick check before a full validation run, add `EVAL_MAX_BATCHES=5` to the command.
+
+</details>
+
+### Train V-JEPA2.1 ViT-g/16 with the Official Repository
+
+<details>
+<summary></summary>
+
+#### Install the Training Environment
+
+Clone the official [V-JEPA2](https://github.com/facebookresearch/vjepa2) repository. VidaForge keeps the training environment under its own repository and reads the official V-JEPA2 source through `VJEPA2_DIR` when training starts:
+
+```bash
+REPO_DIR=/path/to/VidaForge
+VJEPA2_DIR=/path/to/vjepa2
+
+cd "${REPO_DIR}"
+
+uv venv .venv-vjepa2 --python 3.12
+source .venv-vjepa2/bin/activate
+
+uv sync --active --frozen --no-install-project \
+  --project "${REPO_DIR}/vidaforge_adapters/vjepa2/uv_patch"
+
+uv pip install --no-deps -e "${REPO_DIR}"
+```
+
+The lock file installs a matched PyTorch and TorchCodec pair: `torch==2.11.0+cu129` and `torchcodec==0.11.1+cu129`. Keep these versions together; no separate TorchCodec installation is needed.
+
+The official V-JEPA2 repository is used directly as source code and does not need to be installed as a Python package. Verify both repositories from the VidaForge root:
+
+```bash
+PYTHONPATH="${VJEPA2_DIR}:${PYTHONPATH:-}" \
+  python -c "import app.scaffold; import vidaforge_adapters.vjepa2; print('ok')"
+```
+
+#### Prepare TorchCodec Shared Libraries
+
+TorchCodec loads FFmpeg through shared libraries such as `libavcodec.so`, `libavformat.so`, and `libavutil.so`. An FFmpeg archive that only provides the `ffmpeg` and `ffprobe` executables is not sufficient for this training path.
+
+For Linux x86_64, open the [BtbN FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases) and download the FFmpeg 7.1 GPL shared archive:
+
+```text
+ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
+```
+
+The `shared` part of the filename is important. Extract the archive to a stable location:
+
+```bash
+mkdir -p "${HOME}/opt"
+tar -xf ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz \
+  -C "${HOME}/opt"
+
+export FFMPEG_HOME="${HOME}/opt/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1"
+```
+
+The extracted directory should contain both the command-line tools and the shared libraries:
+
+```text
+${FFMPEG_HOME}/
+├── bin/
+│   ├── ffmpeg
+│   └── ffprobe
+└── lib/
+    ├── libavcodec.so*
+    ├── libavformat.so*
+    └── libavutil.so*
+```
+
+Expose the FFmpeg commands and shared libraries to the current shell:
+
+```bash
+export PATH="${FFMPEG_HOME}/bin:${PATH}"
+export TORCHCODEC_FFMPEG_LIB="${FFMPEG_HOME}/lib"
+export LD_LIBRARY_PATH="${TORCHCODEC_FFMPEG_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+```
+
+Check the FFmpeg commands and load TorchCodec before starting a distributed job:
+
+```bash
+ffmpeg -version
+ffprobe -version
+python -c "from torchcodec.decoders import VideoDecoder; print('torchcodec ok')"
+```
+
+Finally, decode one real clip from the training manifest:
+
+```bash
+export TEST_VIDEO=/absolute/path/to/one_clip.mp4
+
+python - <<'PY'
+import os
+
+from torchcodec.decoders import VideoDecoder
+
+decoder = VideoDecoder(os.environ["TEST_VIDEO"], device="cpu")
+print(f"decoded frames: {len(decoder)}")
+PY
+```
+
+`vidaforge_adapters/vjepa2/run.sh` and `run_eval.sh` read `TORCHCODEC_FFMPEG_LIB` and add it to `LD_LIBRARY_PATH` before launching distributed workers.
+
+If TorchCodec reports that `libpython3.12.so` is missing, locate the shared-library directory of the active Python installation and pass it explicitly:
+
+```bash
+export PYTHON_SHARED_LIB="$(
+  python -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR") or "")'
+)"
+export LD_LIBRARY_PATH="${PYTHON_SHARED_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+```
+
+`PYTHON_SHARED_LIB` is an optional troubleshooting setting. Most environments do not need it.
+
+#### Prepare Training Inputs
+
+V-JEPA2 training reads the `train.csv` manifest produced in Stage 5. Point `TRAIN_CSV` to that file and choose a directory for checkpoints, logs, and the resolved training config:
+
+```bash
+TRAIN_CSV=/path/to/stage5_vjepa2_dataset/train.csv
+TRAIN_OUTPUT_DIR=/path/to/vjepa2_output
+
+test -f "${TRAIN_CSV}"
+mkdir -p "${TRAIN_OUTPUT_DIR}"
+```
+
+For the default Stage 5 output, the manifest is located at:
+
+```text
+DATA_DIR/data/stage5_packaging/vjepa2/run_id_<RUN_ID>/train.csv
+```
+
+If you created matching train and validation subsets in Section 16, use the manifest from the chosen training split instead:
+
+```bash
+TRAIN_CSV=/path/to/vjepa2_splits/mixed_train/train.csv
+```
+
+Check the manifest before launching training:
+
+```bash
+head -n 3 "${TRAIN_CSV}"
+wc -l "${TRAIN_CSV}"
+```
+
+Each line should contain an absolute clip path followed by label `0`. The line count is the number of clips V-JEPA2 will read in one complete pass over the dataset.
+
+#### Launch Training
+
+Activate the V-JEPA2 environment and launch training from the VidaForge repository. The example below trains V-JEPA2.1 ViT-g/16 on one node with eight GPUs for one complete pass over the dataset:
+
+```bash
+cd "${REPO_DIR}"
+source .venv-vjepa2/bin/activate
+
+export VJEPA2_DIR=/path/to/vjepa2
+
+NNODES=1 \
+NODE_RANK=0 \
+NPROC_PER_NODE=8 \
+bash vidaforge_adapters/vjepa2/run.sh \
+  folder="${TRAIN_OUTPUT_DIR}" \
+  data.datasets=[${TRAIN_CSV}] \
+  optimization.epochs=1
+```
+
+`folder` is the output directory used by the official V-JEPA2 training code. VidaForge writes the resolved configuration to `${TRAIN_OUTPUT_DIR}/params-pretrain.yaml`, and V-JEPA2 writes its logs and checkpoints under the same directory.
+
+The main settings are:
+
+- `NNODES`: total number of training nodes.
+- `NODE_RANK`: rank of the current node, starting from `0`.
+- `NPROC_PER_NODE`: number of GPUs used on each node.
+- `data.datasets`: one or more Stage 5 V-JEPA2 manifests.
+- `optimization.epochs`: number of complete passes over the training manifest.
+
+The default config uses a per-process batch size of `2`. With eight training processes, the global batch size is `16`. VidaForge counts the manifest rows and resolves `optimization.ipe` automatically:
+
+```text
+steps per epoch = ceil(number of clips / global batch size)
+total steps = steps per epoch * optimization.epochs
+```
+
+The resolved sample count, world size, global batch size, `ipe`, and total steps are recorded in `params-pretrain.yaml` under `vidaforge_runtime`.
+
+#### Evaluate Validation Loss
+
+Prepare a separate Stage 5 V-JEPA2 manifest for validation. Use the resolved `params-pretrain.yaml` from the training run so evaluation loads the same model settings and training schedule:
+
+```bash
+VALID_CSV=/path/to/vjepa2_splits/validation/train.csv
+CONFIG_PATH="${TRAIN_OUTPUT_DIR}/params-pretrain.yaml"
+CHECKPOINT_DIR="${TRAIN_OUTPUT_DIR}"
+
+test -f "${VALID_CSV}"
+test -f "${CONFIG_PATH}"
+```
+
+Evaluate all `e*.pth.tar` checkpoints in the training output directory:
+
+```bash
+VJEPA2_DIR=/path/to/vjepa2 \
+CONFIG_PATH="${CONFIG_PATH}" \
+VALID_CSV="${VALID_CSV}" \
+CHECKPOINT_DIR="${CHECKPOINT_DIR}" \
+NNODES=1 \
+NODE_RANK=0 \
+NPROC_PER_NODE=8 \
+bash vidaforge_adapters/vjepa2/run_eval.sh
+```
+
+Results are written to:
+
+```text
+TRAIN_OUTPUT_DIR/eval/
+├── e0.json
+├── e1.json
+└── ...
+```
+
+Each JSON file records the validation loss, evaluated sample and batch counts, checkpoint epoch, model name, batch size, and the config and validation manifest used for that run. Existing non-empty result files are skipped, so an interrupted evaluation can continue from the remaining checkpoints.
+
+For a short end-to-end check before evaluating the full validation set, add `MAX_BATCHES=5` to the command. To evaluate one checkpoint, set `CKPT_PATH=/path/to/e0.pth.tar` instead of `CHECKPOINT_DIR`.
+
+</details>
+
 ## Inspect Outputs with the Viewer
 
 VidaForge includes a unified Streamlit viewer for checking step outputs:

@@ -1,20 +1,29 @@
 # AutoModel uv patch
 
-This directory is for uv project files that should be copied into the root of
-an AutoModel checkout before installing its training dependencies.
+This directory contains the dependency definition used by the VidaForge
+NeMo-AutoModel training environment.
 
 Expected files:
 
 - `pyproject.toml`
 - `uv.lock`
 
-Usage:
+Create the environment under the VidaForge repository and install the official
+NeMo-AutoModel checkout plus VidaForge as editable packages:
 
 ```bash
-cd /path/to/AutoModel
-cp /path/to/VidaForge/vidaforge_adapters/automodel/uv_patch/pyproject.toml ./pyproject.toml
-cp /path/to/VidaForge/vidaforge_adapters/automodel/uv_patch/uv.lock ./uv.lock
-uv sync
+REPO_DIR=/path/to/VidaForge
+AUTOMODEL_DIR=/path/to/Automodel
+
+cd "${REPO_DIR}"
+uv venv .venv-automodel --python 3.12
+source .venv-automodel/bin/activate
+
+uv sync --active --frozen --no-install-project \
+  --project "${REPO_DIR}/vidaforge_adapters/automodel/uv_patch"
+
+uv pip install --no-deps -e "${AUTOMODEL_DIR}"
+uv pip install --no-deps -e "${REPO_DIR}"
 ```
 
 AutoModel training configs should point to the VidaForge adapter dataloader:
