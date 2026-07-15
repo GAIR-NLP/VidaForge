@@ -143,15 +143,18 @@ DATA_DIR/
 
 The experiments in the blog used videos from [LLaVA-OneVision-2-Data](https://huggingface.co/datasets/mvp-lab/LLaVA-OneVision-2-Data). The full dataset is very large, so for a local smoke run you should start with a single tar shard, or simply use a few local videos.
 
-One example shard is:
-
-```text
-mid_training_video/60s/train_00000_of_10809.tar
-```
-
-Download and unpack one shard into a local raw-video folder, then set the run paths:
+Download and extract one example shard, then set the run paths:
 
 ```bash
+mkdir -p examples/raw_videos
+
+wget -c \
+  "https://huggingface.co/datasets/mvp-lab/LLaVA-OneVision-2-Data/resolve/main/mid_training_video/60s/train_00000_of_10809.tar?download=true" \
+  -O examples/train_00000_of_10809.tar
+
+tar -xf examples/train_00000_of_10809.tar \
+  -C examples/raw_videos
+
 export RAW_DIR="$(pwd)/examples/raw_videos"
 export DATA_DIR="$(pwd)/examples/vidaforge_output"
 export RUN_ID=llava_ov2_60s_smoke
