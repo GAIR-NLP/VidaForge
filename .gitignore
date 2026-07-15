@@ -9,6 +9,7 @@ __pycache__/
 .venv/
 .venv-*/
 
+AGENTS.md
 data/
 outputs/
 runs/

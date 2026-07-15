@@ -5,8 +5,14 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from importlib import import_module
+import os
 from pathlib import Path
 import sys
+
+# PyArrow's mimalloc backend can crash while Streamlit creates a fresh script
+# thread for a rerun. Set this before importing Streamlit/PyArrow, while still
+# allowing callers to explicitly choose another supported backend.
+os.environ.setdefault("ARROW_DEFAULT_MEMORY_POOL", "system")
 
 import streamlit as st
 
