@@ -1490,20 +1490,10 @@ By default, the quick start packages clips with `select_pass=1` and uses `captio
 
 Stage 5 Wan packaging decodes clips with TorchCodec. TorchCodec needs an FFmpeg build that includes shared libraries such as `libavcodec.so`, `libavformat.so`, and `libavutil.so`; an archive containing only the `ffmpeg` and `ffprobe` executables is not sufficient.
 
-For Linux x86_64, download an FFmpeg 7.1 GPL shared build from the [FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases). One matching archive is:
-
-```text
-ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
-```
-
-Extract it to a stable location and expose both its commands and shared libraries:
+From the [FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases), download the `shared` build that matches the FFmpeg version used in the earlier stages, then extract it. Set `FFMPEG_HOME` to the extracted directory:
 
 ```bash
-mkdir -p "${HOME}/opt"
-tar -xf ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz \
-  -C "${HOME}/opt"
-
-export FFMPEG_HOME="${HOME}/opt/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1"
+export FFMPEG_HOME=/path/to/extracted/ffmpeg-shared
 export PATH="${FFMPEG_HOME}/bin:${PATH}"
 export LD_LIBRARY_PATH="${FFMPEG_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 ```
