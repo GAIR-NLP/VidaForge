@@ -2066,10 +2066,11 @@ VidaForge includes a unified Streamlit viewer for checking step outputs:
 
 ```bash
 export DATA_DIR="$(pwd)/examples/vidaforge_output"
-streamlit run viewers/videoforge_viewer.py
+export RAW_DIR="$(pwd)/examples/raw_videos"
+streamlit run viewers/vidaforge_viewer.py
 ```
 
-Run it from the repository root after activating the VidaForge environment. `DATA_DIR` should point to the same VidaForge output directory used by the pipeline. The viewer also exposes this path as "Project data root" in the sidebar, so you can change it there if needed.
+Run it from the repository root after activating the VidaForge environment. `DATA_DIR` should point to the same VidaForge output directory used by the pipeline, while `RAW_DIR` is needed when browsing Stage 1 Probe/Screen rows whose media paths still refer to raw inputs. The viewer also exposes these paths as "Project data root" and, where needed, "Raw data root" in the sidebar, so you can change them there. Filesystem paths are masked by default for screenshots and recordings; enable "Show filesystem paths" when full paths are needed for debugging.
 
 In the sidebar, choose a stage, a step, and a run id. For Select, choose Stage 3 / Step 4 and switch between `all`, `pass`, and `reject` partitions. This is the fastest way to inspect selected clips, rejected clips, rule results, quality scores, and duplicate-group fields before changing a recipe.
 

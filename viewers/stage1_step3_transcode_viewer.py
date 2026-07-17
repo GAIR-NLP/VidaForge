@@ -43,6 +43,7 @@ def render_page() -> None:
         title="Stage 1 Step 3: Transcode",
         include_filter_scope=True,
         include_probe_filter=False,
+        include_raw_dir=True,
     )
     if context is None:
         return
@@ -228,6 +229,8 @@ def render_page() -> None:
             browse_order=context["browse_order"],
             widget_key_prefix=f"{STAGE_DIR}_{STEP_DIR}_samples",
             media_path_fields=("video_path", "raw_path"),
+            raw_media_path_fields=("raw_path",),
+            show_local_paths=context["show_local_paths"],
             detail_fields=(
                 "raw_path",
                 "video_path",

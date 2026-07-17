@@ -10,7 +10,7 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from vidaforge.common import join_data_dir
+from vidaforge.common import join_data_dir, join_raw_dir
 from vidaforge.index import load_parquet
 
 DEFAULT_PROJECT_DIR = Path(
@@ -471,8 +471,10 @@ def show_samples(
     columns: int,
     detail_fields: Sequence[str],
     media_path_fields: Sequence[str] = ("video_path",),
+    raw_media_path_fields: Sequence[str] = (),
     browse_order: str = "ordered",
     widget_key_prefix: str = "samples",
+    show_local_paths: bool = False,
 ) -> None:
     total = len(frame)
     if total == 0:
@@ -482,6 +484,7 @@ def show_samples(
     display_frame = frame
     if browse_order == "shuffled":
         display_frame = frame.sample(frac=1.0, random_state=0).reset_index(drop=True)
+    raw_media_fields = set(raw_media_path_fields)
 
     pages = math.ceil(total / per_page)
     page = int(
@@ -517,7 +520,11 @@ def show_samples(
                         media_path = value
                         media_field = field
                         break
-                    candidate = join_data_dir(value)
+                    candidate = (
+                        join_raw_dir(value)
+                        if field in raw_media_fields
+                        else join_data_dir(value)
+                    )
                     if candidate.exists():
                         media_path = str(candidate)
                         media_field = field
@@ -528,10 +535,16 @@ def show_samples(
                         st.video(media_path, autoplay=False)
                         st.caption(f"{media_field}: {Path(media_path).name}")
                     except Exception as exc:  # noqa: BLE001
-                        st.warning(f"Video file cannot be opened and was skipped: {media_path}")
-                        st.caption(str(exc))
+                        display_path = media_path if show_local_paths else Path(media_path).name
+                        st.warning(f"Video file cannot be opened and was skipped: {display_path}")
+                        st.caption(str(exc) if show_local_paths else type(exc).__name__)
                 elif fallback_media_path:
-                    st.caption(f"{fallback_media_field} missing: {fallback_media_path}")
+                    display_path = (
+                        fallback_media_path
+                        if show_local_paths
+                        else Path(fallback_media_path).name
+                    )
+                    st.caption(f"{fallback_media_field} missing: {display_path}")
                 detail = {
                     key: value
                     for key, value in row.to_dict().items()
@@ -549,6 +562,7 @@ def render_metadata_selection(
     include_filter_scope: bool,
     include_probe_filter: bool = True,
     include_browse_layout_controls: bool = True,
+    include_raw_dir: bool = False,
     load_frame: bool = True,
     load_summary_data: bool = True,
 ) -> dict[str, object] | None:
@@ -558,8 +572,33 @@ def render_metadata_selection(
 
     with st.sidebar:
         st.subheader(title)
-        project_dir = st.text_input("Project data root", value=default_project_dir, key=f"{widget_prefix}_project_dir")
+        show_local_paths = st.toggle(
+            "Show filesystem paths",
+            value=False,
+            key=f"{widget_prefix}_show_local_paths",
+            help="Disabled by default to avoid exposing local paths in screenshots or recordings.",
+        )
+        path_input_type = "default" if show_local_paths else "password"
+        project_dir = st.text_input(
+            "Project data root",
+            value=default_project_dir,
+            key=f"{widget_prefix}_project_dir",
+            type=path_input_type,
+        )
         os.environ["DATA_DIR"] = str(Path(project_dir).expanduser().resolve())
+        if include_raw_dir:
+            default_raw_dir = os.environ.get(
+                "RAW_DIR",
+                str(Path.cwd() / "examples" / "raw_videos"),
+            )
+            raw_dir = st.text_input(
+                "Raw data root",
+                value=default_raw_dir,
+                key=f"{widget_prefix}_raw_dir",
+                help="Root directory used to resolve raw_path values.",
+                type=path_input_type,
+            )
+            os.environ["RAW_DIR"] = str(Path(raw_dir).expanduser().resolve())
         available_run_ids = list_run_ids(project_dir, stage_dir, step_dir)
         run_id_options = available_run_ids or [""]
         run_id = st.selectbox(
@@ -573,6 +612,7 @@ def render_metadata_selection(
             "Metadata path override (optional)",
             value="",
             key=f"{widget_prefix}_metadata_override",
+            type=path_input_type,
         )
         if include_browse_layout_controls:
             per_page = st.selectbox("Videos per page", [4, 8, 12, 16, 24], index=2, key=f"{widget_prefix}_per_page")
@@ -616,7 +656,16 @@ def render_metadata_selection(
         return None
 
     metadata_path = resolve_metadata_path(project_dir, stage_dir, step_dir, run_id, metadata_override)
-    st.caption(f"Current metadata path: `{metadata_path}`")
+    if show_local_paths:
+        metadata_path_label = str(metadata_path)
+    else:
+        try:
+            metadata_path_label = str(
+                metadata_path.relative_to(Path(project_dir).expanduser().resolve())
+            )
+        except ValueError:
+            metadata_path_label = metadata_path.name
+    st.caption(f"Current metadata path: `{metadata_path_label}`")
 
     if refresh:
         load_rows.clear()
@@ -646,4 +695,5 @@ def render_metadata_selection(
         "filter_scope": filter_scope,
         "extra_sidebar_container": extra_sidebar_container,
         "refresh": refresh,
+        "show_local_paths": show_local_paths,
     }
