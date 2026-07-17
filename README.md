@@ -1486,6 +1486,62 @@ This packaging path reads the clip records produced by Stage 4 and converts them
 
 By default, the quick start packages clips with `select_pass=1` and uses `caption_level_3` as the training text. Each output `.meta` file contains the tensors and metadata required by the training dataloader.
 
+#### Prepare the TorchCodec Runtime
+
+Stage 5 Wan packaging decodes clips with TorchCodec. TorchCodec needs an FFmpeg build that includes shared libraries such as `libavcodec.so`, `libavformat.so`, and `libavutil.so`; an archive containing only the `ffmpeg` and `ffprobe` executables is not sufficient.
+
+For Linux x86_64, download an FFmpeg 7.1 GPL shared build from the [FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases). One matching archive is:
+
+```text
+ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
+```
+
+Extract it to a stable location and expose both its commands and shared libraries:
+
+```bash
+mkdir -p "${HOME}/opt"
+tar -xf ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz \
+  -C "${HOME}/opt"
+
+export FFMPEG_HOME="${HOME}/opt/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1"
+export PATH="${FFMPEG_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${FFMPEG_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+```
+
+Check TorchCodec before starting the Ray job:
+
+```bash
+ffmpeg -version
+ffprobe -version
+python -c "from torchcodec.decoders import VideoDecoder; print('torchcodec ok')"
+```
+
+Decode one real clip to verify the complete runtime:
+
+```bash
+export TEST_VIDEO=/absolute/path/to/one_clip.mp4
+
+python - <<'PY'
+import os
+
+from torchcodec.decoders import VideoDecoder
+
+decoder = VideoDecoder(os.environ["TEST_VIDEO"], device="cpu")
+print(f"decoded frames: {len(decoder)}")
+PY
+```
+
+If TorchCodec specifically reports that `libpython*.so` is missing, add the active Python shared-library directory:
+
+```bash
+PYTHON_LIB_DIR="$(
+  python -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR") or "")'
+)"
+export LD_LIBRARY_PATH="${PYTHON_LIB_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+```
+
+The Stage 5 runner uses this shell environment, and VidaForge forwards `LD_LIBRARY_PATH` to its Ray workers.
+
 The step config is split across:
 
 ```text
@@ -1888,82 +1944,9 @@ PYTHONPATH="${VJEPA2_DIR}:${PYTHONPATH:-}" \
   python -c "import app.scaffold; import vidaforge_adapters.vjepa2; print('ok')"
 ```
 
-#### Prepare TorchCodec Shared Libraries
+#### Reuse the TorchCodec Runtime
 
-TorchCodec loads FFmpeg through shared libraries such as `libavcodec.so`, `libavformat.so`, and `libavutil.so`. An FFmpeg archive that only provides the `ffmpeg` and `ffprobe` executables is not sufficient for this training path.
-
-For Linux x86_64, open the [BtbN FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases) and download the FFmpeg 7.1 GPL shared archive:
-
-```text
-ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz
-```
-
-The `shared` part of the filename is important. Extract the archive to a stable location:
-
-```bash
-mkdir -p "${HOME}/opt"
-tar -xf ffmpeg-n7.1-latest-linux64-gpl-shared-7.1.tar.xz \
-  -C "${HOME}/opt"
-
-export FFMPEG_HOME="${HOME}/opt/ffmpeg-n7.1-latest-linux64-gpl-shared-7.1"
-```
-
-The extracted directory should contain both the command-line tools and the shared libraries:
-
-```text
-${FFMPEG_HOME}/
-├── bin/
-│   ├── ffmpeg
-│   └── ffprobe
-└── lib/
-    ├── libavcodec.so*
-    ├── libavformat.so*
-    └── libavutil.so*
-```
-
-Expose the FFmpeg commands and shared libraries to the current shell:
-
-```bash
-export PATH="${FFMPEG_HOME}/bin:${PATH}"
-export TORCHCODEC_FFMPEG_LIB="${FFMPEG_HOME}/lib"
-export LD_LIBRARY_PATH="${TORCHCODEC_FFMPEG_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-```
-
-Check the FFmpeg commands and load TorchCodec before starting a distributed job:
-
-```bash
-ffmpeg -version
-ffprobe -version
-python -c "from torchcodec.decoders import VideoDecoder; print('torchcodec ok')"
-```
-
-Finally, decode one real clip from the training manifest:
-
-```bash
-export TEST_VIDEO=/absolute/path/to/one_clip.mp4
-
-python - <<'PY'
-import os
-
-from torchcodec.decoders import VideoDecoder
-
-decoder = VideoDecoder(os.environ["TEST_VIDEO"], device="cpu")
-print(f"decoded frames: {len(decoder)}")
-PY
-```
-
-`vidaforge_adapters/vjepa2/run.sh` and `run_eval.sh` read `TORCHCODEC_FFMPEG_LIB` and add it to `LD_LIBRARY_PATH` before launching distributed workers.
-
-If TorchCodec reports that `libpython3.12.so` is missing, locate the shared-library directory of the active Python installation and pass it explicitly:
-
-```bash
-export PYTHON_SHARED_LIB="$(
-  python -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR") or "")'
-)"
-export LD_LIBRARY_PATH="${PYTHON_SHARED_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-```
-
-`PYTHON_SHARED_LIB` is an optional troubleshooting setting. Most environments do not need it.
+V-JEPA2 reads clips with TorchCodec during training and evaluation. Before launching `run.sh` or `run_eval.sh`, prepare `PATH` and `LD_LIBRARY_PATH` as described in [Prepare the TorchCodec Runtime](#prepare-the-torchcodec-runtime).
 
 #### Prepare Training Inputs
 

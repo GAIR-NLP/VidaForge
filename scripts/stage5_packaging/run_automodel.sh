@@ -11,62 +11,6 @@ else
   PYTHON_BIN="${PYTHON_BIN:-python}"
 fi
 
-DEFAULT_TORCHCODEC_FFMPEG_LIB="${DEFAULT_TORCHCODEC_FFMPEG_LIB:-}"
-DEFAULT_PYTHON_SHARED_LIB="${DEFAULT_PYTHON_SHARED_LIB:-}"
-
-if [[ -z "${TORCHCODEC_FFMPEG_LIB:-}" && -d "${DEFAULT_TORCHCODEC_FFMPEG_LIB}" ]]; then
-  TORCHCODEC_FFMPEG_LIB="${DEFAULT_TORCHCODEC_FFMPEG_LIB}"
-fi
-if [[ -z "${PYTHON_SHARED_LIB:-}" && -d "${DEFAULT_PYTHON_SHARED_LIB}" ]]; then
-  PYTHON_SHARED_LIB="${DEFAULT_PYTHON_SHARED_LIB}"
-fi
-
-if [[ -n "${TORCHCODEC_FFMPEG_LIB:-}" || -n "${PYTHON_SHARED_LIB:-}" ]]; then
-  if [[ -n "${TORCHCODEC_FFMPEG_LIB:-}" && ! -d "${TORCHCODEC_FFMPEG_LIB}" ]]; then
-    echo "TORCHCODEC_FFMPEG_LIB does not exist: ${TORCHCODEC_FFMPEG_LIB}" >&2
-    exit 2
-  fi
-  if [[ -n "${PYTHON_SHARED_LIB:-}" && ! -d "${PYTHON_SHARED_LIB}" ]]; then
-    echo "PYTHON_SHARED_LIB does not exist: ${PYTHON_SHARED_LIB}" >&2
-    exit 2
-  fi
-
-  CLEAN_LD_LIBRARY_PATH=""
-  IFS=':' read -r -a LD_LIBRARY_PATH_ENTRIES <<< "${LD_LIBRARY_PATH:-}"
-  for entry in "${LD_LIBRARY_PATH_ENTRIES[@]}"; do
-    if [[ -z "${entry}" || "${entry}" == *"ffmpeg-8.0.1"* ]]; then
-      continue
-    fi
-    if [[ -n "${TORCHCODEC_FFMPEG_LIB:-}" && "${entry}" == "${TORCHCODEC_FFMPEG_LIB}" ]]; then
-      continue
-    fi
-    if [[ -n "${PYTHON_SHARED_LIB:-}" && "${entry}" == "${PYTHON_SHARED_LIB}" ]]; then
-      continue
-    fi
-    if [[ -z "${CLEAN_LD_LIBRARY_PATH}" ]]; then
-      CLEAN_LD_LIBRARY_PATH="${entry}"
-    else
-      CLEAN_LD_LIBRARY_PATH="${CLEAN_LD_LIBRARY_PATH}:${entry}"
-    fi
-  done
-
-  LD_LIBRARY_PATH=""
-  if [[ -n "${PYTHON_SHARED_LIB:-}" ]]; then
-    LD_LIBRARY_PATH="${PYTHON_SHARED_LIB}"
-  fi
-  if [[ -n "${TORCHCODEC_FFMPEG_LIB:-}" ]]; then
-    if [[ -n "${LD_LIBRARY_PATH}" ]]; then
-      LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${TORCHCODEC_FFMPEG_LIB}"
-    else
-      LD_LIBRARY_PATH="${TORCHCODEC_FFMPEG_LIB}"
-    fi
-  fi
-  if [[ -n "${CLEAN_LD_LIBRARY_PATH}" ]]; then
-    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${CLEAN_LD_LIBRARY_PATH}"
-  fi
-  export LD_LIBRARY_PATH
-fi
-
 DATA_DIR="${DATA_DIR:-/path/to/vidaforge_output}"
 export DATA_DIR
 SOURCE="${SOURCE:-example_source}"

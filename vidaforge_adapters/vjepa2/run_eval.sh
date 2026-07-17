@@ -16,21 +16,6 @@ if [[ -z "${CKPT_PATH}" && -z "${CHECKPOINT_DIR}" ]]; then
   exit 2
 fi
 
-if [[ -n "${TORCHCODEC_FFMPEG_LIB:-}" ]]; then
-  [[ -d "${TORCHCODEC_FFMPEG_LIB}" ]] || {
-    echo "TORCHCODEC_FFMPEG_LIB does not exist: ${TORCHCODEC_FFMPEG_LIB}" >&2
-    exit 2
-  }
-  export LD_LIBRARY_PATH="${TORCHCODEC_FFMPEG_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-fi
-if [[ -n "${PYTHON_SHARED_LIB:-}" ]]; then
-  [[ -d "${PYTHON_SHARED_LIB}" ]] || {
-    echo "PYTHON_SHARED_LIB does not exist: ${PYTHON_SHARED_LIB}" >&2
-    exit 2
-  }
-  export LD_LIBRARY_PATH="${PYTHON_SHARED_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-fi
-
 export VJEPA2_DIR
 export PYTHONPATH="${REPO_DIR}:${VJEPA2_DIR}${PYTHONPATH:+:${PYTHONPATH}}"
 
