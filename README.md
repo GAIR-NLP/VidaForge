@@ -1490,19 +1490,16 @@ By default, the quick start packages clips with `select_pass=1` and uses `captio
 
 Stage 5 Wan packaging decodes clips with TorchCodec. TorchCodec needs an FFmpeg build that includes shared libraries such as `libavcodec.so`, `libavformat.so`, and `libavutil.so`; an archive containing only the `ffmpeg` and `ffprobe` executables is not sufficient.
 
-From the [FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases), download the `shared` build that matches the FFmpeg version used in the earlier stages, then extract it. Set `FFMPEG_HOME` to the extracted directory:
+From the [FFmpeg Builds releases](https://github.com/BtbN/FFmpeg-Builds/releases), download the `shared` build that matches the FFmpeg version used in the earlier stages, then extract it. Add its `lib/` directory to the dynamic library search path:
 
 ```bash
-export FFMPEG_HOME=/path/to/extracted/ffmpeg-shared
-export PATH="${FFMPEG_HOME}/bin:${PATH}"
-export LD_LIBRARY_PATH="${FFMPEG_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+export FFMPEG_SHARED_LIB=/path/to/extracted/ffmpeg-shared/lib
+export LD_LIBRARY_PATH="${FFMPEG_SHARED_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 ```
 
 Check TorchCodec before starting the Ray job:
 
 ```bash
-ffmpeg -version
-ffprobe -version
 python -c "from torchcodec.decoders import VideoDecoder; print('torchcodec ok')"
 ```
 
