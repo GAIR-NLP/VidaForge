@@ -18,7 +18,7 @@ WAN_INPUT_SIZE_MULTIPLE = (
     WAN_VAE_SPATIAL_COMPRESSION_RATIO * WAN_TRANSFORMER_SPATIAL_PATCH_SIZE
 )
 WAN_TEMPORAL_STRIDE = 4
-MAX_TEMPORAL_REPEAT_PAD_FRAMES = 1
+MAX_TEMPORAL_REPEAT_PAD_FRAMES = WAN_TEMPORAL_STRIDE - 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -311,8 +311,8 @@ class WanAutoModelEncoder:
             raise ValueError(f"video frame count must be > 0: {path}")
         missing_frame_count = frame_count - input_frame_count
         # FFmpeg/ffprobe duration metadata and TorchCodec decoder length can
-        # differ by one frame near clip boundaries. Allow exactly one repeated
-        # sampled frame so Wan 4n+1 buckets remain usable without stretching
+        # differ near clip boundaries. Allow fewer than one temporal stride of
+        # repeated samples so Wan 4n+1 buckets remain usable without stretching
         # genuinely short clips.
         if missing_frame_count > MAX_TEMPORAL_REPEAT_PAD_FRAMES:
             raise ValueError(
