@@ -13,6 +13,7 @@ dist_env:
 model:
   pretrained_model_name_or_path: Wan-AI/Wan2.1-T2V-1.3B-Diffusers
   mode: pretrain
+  # Keep FP32 master weights; VidaForgeTrainDiffusionRecipe autocasts forward ops to BF16.
   torch_dtype: float32
   compute_dtype: bfloat16
   pipeline_spec:

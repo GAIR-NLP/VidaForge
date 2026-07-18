@@ -15,7 +15,8 @@
 from __future__ import annotations
 
 from nemo_automodel.components.config._arg_parser import parse_args_and_load_config
-from nemo_automodel.recipes.diffusion.train import TrainDiffusionRecipe
+
+from vidaforge_adapters.automodel.recipe import VidaForgeTrainDiffusionRecipe
 
 
 def main(
@@ -24,7 +25,7 @@ def main(
     """Run diffusion pretraining with the configured recipe."""
 
     cfg = parse_args_and_load_config(default_config_path)
-    recipe = TrainDiffusionRecipe(cfg)
+    recipe = VidaForgeTrainDiffusionRecipe(cfg)
     recipe.setup()
     recipe.run_train_validation_loop()
 
