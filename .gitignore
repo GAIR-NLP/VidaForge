@@ -12,6 +12,7 @@ __pycache__/
 AGENTS.md
 data/
 outputs/
+tests/
 runs/
 wandb/
 logs/

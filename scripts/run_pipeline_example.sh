@@ -92,7 +92,7 @@ run_detect() {
     step.ray_num_cpus=1 \
     step.min_len_sec=2.0 \
     step.detectors=['transnetv2'] \
-    step.detector.transnetv2.weights_path="/path/to/transnetv2-pytorch-weights.pth"
+    step.detector.transnetv2.weights_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/examples/TransNetV2/transnetv2-pytorch-weights.pth"
 }
 
 run_clip() {
@@ -146,8 +146,8 @@ run_filter_aesthetic() {
     step.filter.aesthetic.device=cuda \
     step.filter.aesthetic.forward_batch_size=512 \
     step.filter.aesthetic.prefetch_batches=2 \
-    step.filter.aesthetic.predictor_path="/path/to/aesthetic_predictor_v2_5.pth" \
-    step.filter.aesthetic.encoder_path="/path/to/siglip-so400m-patch14-384"
+    step.filter.aesthetic.predictor_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/aesthetic_predictor_v25/aesthetic_predictor_v2_5.pth" \
+    step.filter.aesthetic.encoder_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/aesthetic_predictor_v25/siglip-so400m-patch14-384"
 }
 
 run_filter_text() {
@@ -166,7 +166,7 @@ run_filter_text() {
     step.filter.text.device=cuda \
     step.filter.text.forward_batch_size=512 \
     step.filter.text.prefetch_batches=2 \
-    step.filter.text.model_path="/path/to/PP-OCRv5_server_det_safetensors"
+    step.filter.text.model_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/PP-OCRv5_server_det_safetensors"
 }
 
 run_dedup_pdq() {
@@ -185,7 +185,7 @@ run_dedup_pdq() {
     step.apply.ray_num_gpus=0 \
     step.apply.batch_size=64 \
     step.match.replicas=auto \
-    step.match.ray_num_cpus=16 \
+    step.match.ray_num_cpus=10 \
     step.match.ray_num_gpus=0 \
     step.match.batch_size=512
 }
@@ -206,10 +206,10 @@ run_dedup_cosmos() {
     step.apply.ray_num_gpus=1 \
     step.apply.batch_size=768 \
     step.match.replicas=auto \
-    step.match.ray_num_cpus=16 \
+    step.match.ray_num_cpus=10 \
     step.match.ray_num_gpus=1 \
     step.match.batch_size=512 \
-    step.deduplicator.cosmos.feature.model_name="/path/to/Cosmos-Embed1-336p" \
+    step.deduplicator.cosmos.feature.model_name="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/Cosmos-Embed1-336p" \
     step.deduplicator.cosmos.feature.forward_batch_size=256 \
     step.deduplicator.cosmos.feature.prefetch_batches=2 \
     step.deduplicator.cosmos.match.min_cosine_similarity=0.95 \
@@ -248,7 +248,7 @@ run_camera() {
     input_path="${input_path}" \
     output_path="${output_path}" \
     limit="${CLIP_LIMIT}" \
-    step.serve.model_path="/path/to/gemma-4-E4B-it" \
+    step.serve.model_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/gemma-4-E4B-it" \
     step.serve.model_name="gemma-4-E4B-it" \
     step.resume=true \
     step.serve.replicas=auto \
@@ -273,13 +273,14 @@ run_caption() {
     output_path="${output_path}" \
     limit="${CLIP_LIMIT}" \
     step.mode="video" \
-    step.serve.model_path="/path/to/Qwen3.6-27B-FP8" \
+    step.serve.model_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/Qwen3.6-27B-FP8" \
     step.serve.model_name="Qwen3.6-27B-FP8" \
-    step.resume=true \
+    step.resume=false \
     step.serve.replicas=auto \
     step.serve.tp_size=1 \
     step.serve.ray_num_cpus=5 \
     step.serve.allowed_local_media_path="${DATA_DIR}" \
+    step.serve.extra_args="[--max_num_seqs,800]" \
     step.client.batch_size=256 \
     step.client.ray_num_cpus=5 \
     step.inference.media_input=local \
@@ -298,12 +299,13 @@ run_tag() {
     output_path="${output_path}" \
     limit="${CLIP_LIMIT}" \
     step.resume=true \
-    step.serve.model_path="/path/to/Qwen3.6-27B-FP8" \
+    step.serve.model_path="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/Qwen3.6-27B-FP8" \
     step.serve.model_name="Qwen3.6-27B-FP8" \
     step.serve.replicas=auto \
     step.serve.tp_size=1 \
     step.serve.ray_num_cpus=5 \
     step.serve.allowed_local_media_path="${DATA_DIR}" \
+    step.serve.extra_args="[--max_num_seqs,800]" \
     step.client.batch_size=256 \
     step.client.ray_num_cpus=5 \
     step.inference.media_input=local \
@@ -321,16 +323,16 @@ run_pack_automodel_wan() {
     input_path="${input_path}" \
     output_path="${output_path}" \
     limit="${CLIP_LIMIT}" \
-    step.resume=true \
+    step.resume=false \
     step.batch_size=32 \
     step.replicas=auto \
     step.ray_num_cpus=8 \
     step.ray_num_gpus=1 \
-    step.select_pass=1 \
+    step.select_pass=null \
     step.caption_field=caption_level_3 \
     step.dynamic_forward_batch_size=4 \
     step.metadata_shard_size="${PARQUET_SIZE}" \
-    step.encoder.model_name="Wan-AI/Wan2.1-T2V-1.3B-Diffusers"
+    step.encoder.model_name="/inspire/hdd2/project/qproject-fundationmodel/mitiantian-253108120109/yema/hdd2-data/Wan2.1-T2V-1.3B-Diffusers"
 }
 
 run_pack_vjepa2() {
@@ -342,7 +344,7 @@ run_pack_vjepa2() {
     input_path="${input_path}" \
     output_path="${output_path}" \
     limit="${CLIP_LIMIT}" \
-    step.select_pass=1 \
+    step.select_pass=null \
     step.duration_sec.min=2.0 \
     step.duration_sec.max=10.0 \
     step.resolution.min=256p \

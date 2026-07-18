@@ -13,6 +13,7 @@ dist_env:
 model:
   pretrained_model_name_or_path: Wan-AI/Wan2.1-T2V-1.3B-Diffusers
   mode: pretrain
+  # Keep FP32 master weights; VidaForgeTrainDiffusionRecipe autocasts forward ops to BF16.
   torch_dtype: float32
   compute_dtype: bfloat16
   pipeline_spec:
@@ -31,7 +32,7 @@ step_scheduler:
 
 data:
   dataloader:
-    _target_: vidaforge_adapters.automodel.build_video_multiresolution_dataloader
+    _target_: vidaforge_adapters.automodel.VidaForgeVideoDataloaderConfig
     cache_dir: /path/to/stage5_automodel_output
     model_type: wan
     dynamic_batch_size: false

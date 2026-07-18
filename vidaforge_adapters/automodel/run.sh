@@ -108,7 +108,7 @@ torchrun \
   --step_scheduler.ckpt_every_steps "${CKPT_EVERY_STEPS}" \
   --step_scheduler.num_epochs "${NUM_EPOCHS}" \
   --step_scheduler.log_every "${LOG_EVERY}" \
-  --data.dataloader._target_ vidaforge_adapters.automodel.build_video_multiresolution_dataloader \
+  --data.dataloader._target_ vidaforge_adapters.automodel.VidaForgeVideoDataloaderConfig \
   --data.dataloader.cache_dir "${CACHE_DIR}" \
   --data.dataloader.model_type "${MODEL_TYPE}" \
   --data.dataloader.dynamic_batch_size "${DYNAMIC_BATCH_SIZE}" \

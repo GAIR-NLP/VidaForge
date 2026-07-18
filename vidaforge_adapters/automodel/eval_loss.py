@@ -10,7 +10,9 @@ import torch
 import torch.distributed as dist
 
 from nemo_automodel.components.config._arg_parser import parse_args_and_load_config
-from nemo_automodel.recipes.diffusion.train import TrainDiffusionRecipe, is_main_process
+from nemo_automodel.recipes.diffusion.train import is_main_process
+
+from vidaforge_adapters.automodel.recipe import VidaForgeTrainDiffusionRecipe
 
 
 DEFAULT_CONFIG_PATH = "vidaforge_adapters/automodel/configs/wan2_1_t2v_flow.yaml"
@@ -27,7 +29,7 @@ def main(default_config_path: str = DEFAULT_CONFIG_PATH) -> None:
     cfg = parse_args_and_load_config(default_config_path)
     eval_options = _prepare_eval_config(cfg)
 
-    recipe = TrainDiffusionRecipe(cfg)
+    recipe = VidaForgeTrainDiffusionRecipe(cfg)
     recipe.setup()
     _reset_eval_dataloader(recipe)
     recipe.model.eval()
@@ -53,7 +55,7 @@ def main(default_config_path: str = DEFAULT_CONFIG_PATH) -> None:
         )
 
 
-def evaluate_loss(recipe: TrainDiffusionRecipe, options: dict[str, Any]) -> dict[str, Any]:
+def evaluate_loss(recipe: VidaForgeTrainDiffusionRecipe, options: dict[str, Any]) -> dict[str, Any]:
     """Run a no-grad validation pass over the configured dataloader."""
     max_batches = options["max_batches"]
     log_every = options["log_every"]
@@ -128,7 +130,7 @@ def evaluate_loss(recipe: TrainDiffusionRecipe, options: dict[str, Any]) -> dict
     }
 
 
-def _reset_eval_dataloader(recipe: TrainDiffusionRecipe) -> None:
+def _reset_eval_dataloader(recipe: VidaForgeTrainDiffusionRecipe) -> None:
     """Rebuild a fresh eval dataloader after checkpoint restore.
 
     AutoModel checkpoints include StatefulDataLoader state for training resume.
@@ -228,7 +230,7 @@ def _rank() -> int:
     return 0
 
 
-def _collective_device(recipe: TrainDiffusionRecipe) -> torch.device:
+def _collective_device(recipe: VidaForgeTrainDiffusionRecipe) -> torch.device:
     if dist.is_available() and dist.is_initialized() and str(dist.get_backend()).lower() == "nccl":
         return recipe.device
     return torch.device("cpu")
