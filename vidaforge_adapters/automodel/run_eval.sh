@@ -71,7 +71,7 @@ COMMON_ARGS=(
   --dist_env.backend nccl
   --dist_env.timeout_minutes 30
   --model.pretrained_model_name_or_path "${MODEL_PATH}"
-  --data.dataloader._target_ vidaforge_adapters.automodel.build_video_multiresolution_dataloader
+  --data.dataloader._target_ vidaforge_adapters.automodel.VidaForgeVideoDataloaderConfig
   --data.dataloader.cache_dir "${VALID_CACHE_DIR}"
   --data.dataloader.model_type wan
   --data.dataloader.dynamic_batch_size false

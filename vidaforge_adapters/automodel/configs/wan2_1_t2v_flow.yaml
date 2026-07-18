@@ -31,7 +31,7 @@ step_scheduler:
 
 data:
   dataloader:
-    _target_: vidaforge_adapters.automodel.build_video_multiresolution_dataloader
+    _target_: vidaforge_adapters.automodel.VidaForgeVideoDataloaderConfig
     cache_dir: /path/to/stage5_automodel_output
     model_type: wan
     dynamic_batch_size: false
