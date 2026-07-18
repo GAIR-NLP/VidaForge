@@ -1521,13 +1521,14 @@ print(f"decoded frames: {len(decoder)}")
 PY
 ```
 
-If TorchCodec specifically reports that `libpython*.so` is missing, add the active Python shared-library directory:
+If TorchCodec specifically reports that `libpython*.so` is missing, create a small Conda environment that provides the matching Python shared library. Use the same Python major/minor version as the active VidaForge environment; the example below uses Python 3.11:
 
 ```bash
-PYTHON_LIB_DIR="$(
-  python -c 'import sysconfig; print(sysconfig.get_config_var("LIBDIR") or "")'
-)"
-export LD_LIBRARY_PATH="${PYTHON_LIB_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+conda create -y --prefix /path/to/python-shared python=3.11
+
+export PYTHON_SHARED_LIB=/path/to/python-shared/lib
+ls "${PYTHON_SHARED_LIB}"/libpython3.11.so*
+export LD_LIBRARY_PATH="${PYTHON_SHARED_LIB}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 ```
 
 The Stage 5 runner uses this shell environment, and VidaForge forwards `LD_LIBRARY_PATH` to its Ray workers.
