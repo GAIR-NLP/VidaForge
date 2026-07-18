@@ -1934,19 +1934,11 @@ PYTHONPATH="${VJEPA2_DIR}:${PYTHONPATH:-}" \
 
 #### Reuse the TorchCodec Runtime
 
-V-JEPA2 reads clips with TorchCodec during training and evaluation. Before launching `run.sh` or `run_eval.sh`, prepare `PATH` and `LD_LIBRARY_PATH` as described in [Prepare the TorchCodec Runtime](#prepare-the-torchcodec-runtime).
+V-JEPA2 reads clips with TorchCodec during training and evaluation. Before launching `run.sh` or `run_eval.sh`, prepare `LD_LIBRARY_PATH` as described in [Prepare the TorchCodec Runtime](#prepare-the-torchcodec-runtime).
 
 #### Prepare Training Inputs
 
-V-JEPA2 training reads the `train.csv` manifest produced in Stage 5. Point `TRAIN_CSV` to that file and choose a directory for checkpoints, logs, and the resolved training config:
-
-```bash
-TRAIN_CSV=/path/to/stage5_vjepa2_dataset/train.csv
-TRAIN_OUTPUT_DIR=/path/to/vjepa2_output
-
-test -f "${TRAIN_CSV}"
-mkdir -p "${TRAIN_OUTPUT_DIR}"
-```
+V-JEPA2 training reads the `train.csv` manifest produced in Stage 5.
 
 For the default Stage 5 output, the manifest is located at:
 
@@ -1954,41 +1946,34 @@ For the default Stage 5 output, the manifest is located at:
 DATA_DIR/data/stage5_packaging/vjepa2/run_id_<RUN_ID>/train.csv
 ```
 
-If you created matching train and validation subsets in Section 16, use the manifest from the chosen training split instead:
+Each line contains an absolute clip path followed by label `0`. The label only satisfies the official dataset interface; self-supervised pretraining does not use it as a semantic class. You can inspect a manifest with:
 
 ```bash
-TRAIN_CSV=/path/to/vjepa2_splits/mixed_train/train.csv
+head -n 3 /path/to/stage5_vjepa2_dataset/train.csv
+wc -l /path/to/stage5_vjepa2_dataset/train.csv
 ```
 
-Check the manifest before launching training:
-
-```bash
-head -n 3 "${TRAIN_CSV}"
-wc -l "${TRAIN_CSV}"
-```
-
-Each line should contain an absolute clip path followed by label `0`. The line count is the number of clips V-JEPA2 will read in one complete pass over the dataset.
+The line count is the number of clips V-JEPA2 reads in one complete pass over the dataset.
 
 #### Launch Training
 
 Activate the V-JEPA2 environment and launch training from the VidaForge repository. The example below trains V-JEPA2.1 ViT-g/16 on one node with eight GPUs for one complete pass over the dataset:
 
 ```bash
-cd "${REPO_DIR}"
+cd /path/to/VidaForge
 source .venv-vjepa2/bin/activate
 
-export VJEPA2_DIR=/path/to/vjepa2
-
+VJEPA2_DIR=/path/to/vjepa2 \
 NNODES=1 \
 NODE_RANK=0 \
 NPROC_PER_NODE=8 \
 bash vidaforge_adapters/vjepa2/run.sh \
-  folder="${TRAIN_OUTPUT_DIR}" \
-  data.datasets=[${TRAIN_CSV}] \
+  folder=/path/to/vjepa2_output \
+  data.datasets=[/path/to/stage5_vjepa2_dataset/train.csv] \
   optimization.epochs=1
 ```
 
-`folder` is the output directory used by the official V-JEPA2 training code. VidaForge writes the resolved configuration to `${TRAIN_OUTPUT_DIR}/params-pretrain.yaml`, and V-JEPA2 writes its logs and checkpoints under the same directory.
+`folder` is the output directory used by the official V-JEPA2 training code. VidaForge writes `params-pretrain.yaml`, logs, and checkpoints under this directory.
 
 The main settings are:
 
@@ -2009,24 +1994,13 @@ The resolved sample count, world size, global batch size, `ipe`, and total steps
 
 #### Evaluate Validation Loss
 
-Prepare a separate Stage 5 V-JEPA2 manifest for validation. Use the resolved `params-pretrain.yaml` from the training run so evaluation loads the same model settings and training schedule:
-
-```bash
-VALID_CSV=/path/to/vjepa2_splits/validation/train.csv
-CONFIG_PATH="${TRAIN_OUTPUT_DIR}/params-pretrain.yaml"
-CHECKPOINT_DIR="${TRAIN_OUTPUT_DIR}"
-
-test -f "${VALID_CSV}"
-test -f "${CONFIG_PATH}"
-```
-
-Evaluate all `e*.pth.tar` checkpoints in the training output directory:
+Prepare a separate Stage 5 V-JEPA2 manifest for validation. Use the resolved `params-pretrain.yaml` from the training run so evaluation loads the same model settings and training schedule. The command below evaluates all `e*.pth.tar` checkpoints in the training output directory:
 
 ```bash
 VJEPA2_DIR=/path/to/vjepa2 \
-CONFIG_PATH="${CONFIG_PATH}" \
-VALID_CSV="${VALID_CSV}" \
-CHECKPOINT_DIR="${CHECKPOINT_DIR}" \
+CONFIG_PATH=/path/to/vjepa2_output/params-pretrain.yaml \
+VALID_CSV=/path/to/vjepa2_validation/train.csv \
+CHECKPOINT_DIR=/path/to/vjepa2_output \
 NNODES=1 \
 NODE_RANK=0 \
 NPROC_PER_NODE=8 \
@@ -2036,7 +2010,7 @@ bash vidaforge_adapters/vjepa2/run_eval.sh
 Results are written to:
 
 ```text
-TRAIN_OUTPUT_DIR/eval/
+/path/to/vjepa2_output/eval/
 ├── e0.json
 ├── e1.json
 └── ...
