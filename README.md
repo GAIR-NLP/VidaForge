@@ -9,7 +9,11 @@
 
 
 <p align="center">
-  <a href="https://yanmaaaaaa.notion.site/vidaforge">Blog</a>
+  <a href="https://yanmaaaaaa.notion.site/vidaforge">📝 Blog</a>
+  ·
+  <a href="https://huggingface.co/datasets/VidaForge/VidaForge-3M">🤗 Dataset</a>
+  ·
+  <a href="https://www.youtube.com/watch?v=dTr7rMLEWyk">🎥 Video</a>
   ·
   <a href="#quick-start">Quick Start</a>
   ·
