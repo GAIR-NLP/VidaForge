@@ -11,13 +11,13 @@
 <p align="center">
   <a href="https://yanmaaaaaa.notion.site/vidaforge">📝 Blog</a>
   ·
-  <a href="https://huggingface.co/datasets/VidaForge/VidaForge-3M">🤗 Dataset</a>
+  <a href="https://huggingface.co/datasets/VidaForge/VidaForge-3M">🤗 VidaForge-3M</a>
   ·
-  <a href="https://www.youtube.com/watch?v=dTr7rMLEWyk">🎥 Video</a>
+  <a href="https://www.youtube.com/watch?v=dTr7rMLEWyk">🎥 Introduction Video</a>
   ·
-  <a href="#quick-start">Quick Start</a>
+  <a href="#quick-start">🚀 Quick Start</a>
   ·
-  <a href="#citation">Citation</a>
+  <a href="#citation">📚 Citation</a>
 </p>
 
 VidaForge is a research-oriented data pipeline for video foundation model pretraining. It turns raw videos into standardized videos, scene-level clips, curated clips, annotated clips, and training-ready datasets for concrete training repositories.
