@@ -301,7 +301,7 @@ class WanAutoModelEncoder:
         if self.device.type == "cuda":
             from torchcodec.decoders import set_cuda_backend
 
-            with set_cuda_backend("beta"):
+            with set_cuda_backend("nvdec"):
                 decoder = VideoDecoder(path, **decoder_kwargs)
         else:
             decoder = VideoDecoder(path, **decoder_kwargs)

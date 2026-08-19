@@ -6,7 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "torch==2.11.0+cu129",
     "torchvision==0.26.0+cu129",
-    "torchcodec",
+    "torchcodec==0.16.0+cu129",
     "tensorboard",
     "wandb",
     "iopath",

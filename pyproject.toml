@@ -41,7 +41,7 @@ dependencies = [
     "torch==2.11.0+cu129",
     "torchvision==0.26.0+cu129",
     "torchaudio==2.11.0+cu129",
-    "torchcodec",
+    "torchcodec==0.16.0+cu129",
     "diffusers>=0.38.0",
     "ftfy>=6.3.1",
 ]

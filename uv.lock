@@ -8,9 +8,6 @@ supported-markers = [
     "platform_machine == 'x86_64' and sys_platform == 'linux'",
 ]
 
-[options]
-prerelease-mode = "allow"
-
 [[package]]
 name = "absl-py"
 version = "2.5.0"
@@ -3783,10 +3780,10 @@ wheels = [
 
 [[package]]
 name = "torchcodec"
-version = "0.11.1+cu129"
+version = "0.16.0+cu129"
 source = { registry = "https://download.pytorch.org/whl/cu129" }
 wheels = [
-    { url = "https://download.pytorch.org/whl/cu129/torchcodec-0.11.1%2Bcu129-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:e58def3a347a7a0476d9d662ecc80bdfb679d0f821af175da439a3e5a534056e", upload-time = "2026-04-14T18:06:04Z" },
+    { url = "https://download.pytorch.org/whl/cu129/torchcodec-0.16.0%2Bcu129-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:615f5faf603edcbb1a142fe49946bf163de229845b8ad462f4925beb5b02a7e5", upload-time = "2026-08-13T12:00:12Z" },
 ]
 
 [[package]]
@@ -4048,7 +4045,7 @@ requires-dist = [
     { name = "streamlit", specifier = ">=1.54.0" },
     { name = "torch", specifier = "==2.11.0+cu129", index = "https://download.pytorch.org/whl/cu129" },
     { name = "torchaudio", specifier = "==2.11.0+cu129", index = "https://download.pytorch.org/whl/cu129" },
-    { name = "torchcodec", index = "https://download.pytorch.org/whl/cu129" },
+    { name = "torchcodec", specifier = "==0.16.0+cu129", index = "https://download.pytorch.org/whl/cu129" },
     { name = "torchvision", specifier = "==0.26.0+cu129", index = "https://download.pytorch.org/whl/cu129" },
     { name = "tqdm", specifier = ">=4.67.3" },
 ]

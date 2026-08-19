@@ -284,7 +284,7 @@ class TorchCodecVideoDataset(torch.utils.data.Dataset):
             from torchcodec.decoders import VideoDecoder, set_cuda_backend
 
             cuda_backend = (
-                set_cuda_backend("beta")
+                set_cuda_backend("nvdec")
                 if self.torchcodec_device.startswith("cuda")
                 else nullcontext()
             )
