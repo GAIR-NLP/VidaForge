@@ -12,8 +12,7 @@ data:
   dataset_type: VideoDataset
   datasets:
   - /path/to/train.csv
-  datasets_weights:
-  - 1.0
+  datasets_weights: null
   batch_size: 2
   crop_size: 256
   patch_size: 16
