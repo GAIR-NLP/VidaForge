@@ -1927,7 +1927,7 @@ uv sync --active --frozen --no-install-project \
 uv pip install --no-deps -e "${REPO_DIR}"
 ```
 
-The lock file installs a matched PyTorch and TorchCodec pair: `torch==2.11.0+cu129` and `torchcodec==0.11.1+cu129`. Keep these versions together; no separate TorchCodec installation is needed.
+The lock file installs a matched PyTorch and TorchCodec pair: `torch==2.11.0+cu129` and `torchcodec==0.16.0+cu129`. Keep these versions together; no separate TorchCodec installation is needed.
 
 The official V-JEPA2 repository is used directly as source code and does not need to be installed as a Python package. Verify both repositories from the VidaForge root:
 
