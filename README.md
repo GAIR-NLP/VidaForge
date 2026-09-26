@@ -4,12 +4,12 @@
 
 <h1 align="center">
   <img src="assets/logo.png" alt="VidaForge logo" width="72" valign="middle">
-  VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab
+  VidaForge: Open Research Infrastructure for Video Pretraining Data Recipes
 </h1>
 
 
 <p align="center">
-  <a href="https://yanmaaaaaa.notion.site/vidaforge">📝 Blog</a>
+  <a href="https://arxiv.org/abs/2609.06652">📄 Paper</a>
   ·
   <a href="https://huggingface.co/datasets/VidaForge/VidaForge-3M">🤗 VidaForge-3M</a>
   ·
@@ -20,13 +20,11 @@
   <a href="#citation">📚 Citation</a>
 </p>
 
-VidaForge is a research-oriented data pipeline for video foundation model pretraining. It turns raw videos into standardized videos, scene-level clips, curated clips, annotated clips, and training-ready datasets for concrete training repositories.
+VidaForge is an open research infrastructure for video pretraining data recipes. It represents a data recipe as an executable five-stage workflow, turning raw videos into standardized videos, scene-level clips, curated clips, annotated clips, and training-ready datasets.
 
-The project started from a simple frustration: public video foundation model reports often spend less and less space on data processing, even as model quality keeps improving. The data work did not suddenly become trivial. More likely, the most valuable details moved into internal systems.
+Researchers can vary processing and curation decisions to construct alternative datasets while preserving how each sample was produced. Intermediate assets and rejected samples remain available for inspection, and training adapters connect data-recipe choices to model pretraining and downstream evaluation.
 
-VidaForge is an attempt to make that part concrete in an academic lab. A data recipe should be easy to change. Intermediate assets should be easy to open and inspect. Rejected samples should stay available for analysis. Most importantly, a data decision should eventually be tested in real pretraining runs, not only in a spreadsheet.
-
-Read the full project story here: https://yanmaaaaaa.notion.site/vidaforge
+Read the paper: [VidaForge: Open Research Infrastructure for Video Pretraining Data Recipes](https://arxiv.org/pdf/2609.06652).
 
 ## Why VidaForge
 
@@ -145,7 +143,7 @@ DATA_DIR/
 <details>
 <summary></summary>
 
-The experiments in the blog used videos from [LLaVA-OneVision-2-Data](https://huggingface.co/datasets/mvp-lab/LLaVA-OneVision-2-Data). The full dataset is very large, so for a local smoke run you should start with a single tar shard, or simply use a few local videos.
+For a local smoke run, you can use videos from [LLaVA-OneVision-2-Data](https://huggingface.co/datasets/mvp-lab/LLaVA-OneVision-2-Data). The full dataset is very large, so start with a single tar shard, or simply use a few local videos.
 
 Download and extract one example shard, then set the run paths:
 
@@ -2067,12 +2065,11 @@ Packaging bridges processed clips and metadata to concrete training repositories
 If you find VidaForge useful, please cite:
 
 ```bibtex
-@misc{ma2026vidaforge,
-    title = {VidaForge: Building a Video Foundation Model Pretraining Data Pipeline from Scratch in an Academic Lab},
-    author = {Ma, Yan and Su, Jiadi and Hu, Zhulin and Chern, Ethan and Zhang, Linhao and Mi, TianTian and Liu, Pengfei},
-    year = {2026},
-    howpublished = {\url{https://yanmaaaaaa.notion.site/vidaforge}},
-    note = {Blog and open-source project}
+@article{ma2026vidaforge,
+    title = {VidaForge: Open Research Infrastructure for Video Pretraining Data Recipes},
+    author = {Ma, Yan and Su, Jiadi and Hu, Zhulin and Chern, Ethan and Zhang, Linhao and Mi, Tiantian and Liu, Pengfei},
+    journal = {arXiv preprint arXiv:2609.06652},
+    year = {2026}
 }
 ```
 
