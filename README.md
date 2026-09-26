@@ -1056,10 +1056,10 @@ The dedup rules control how many clips are kept inside each duplicate group:
 
 - `keep_ratio`: keep this fraction of each group.
 - `min_keep`: keep at least this many clips from a non-empty group.
-- `max_keep`: keep at most this many clips from a group.
+- `max_keep`: cap the number initially chosen from a group.
 - `reject_reason`: value written to `select_reject_reason` when a clip is dropped by that rule.
 
-For example, `pdq.keep_ratio=1.0`, `min_keep=1`, and `max_keep=1` means one representative clip is kept from each PDQ group. `cosmos.keep_ratio=0.2`, `min_keep=1`, and `max_keep=20` keeps a small subset from each semantic duplicate group.
+For example, `pdq.keep_ratio=1.0`, `min_keep=1`, and `max_keep=1` means one representative clip is kept from each PDQ group. For Cosmos, the same parameters select the initial reference clips from the quality- and PDQ-passing candidates (20%, rounded up, between 1 and 20). Each remaining clip is rejected only if its embedding has cosine similarity at or above the Cosmos dedup threshold to an initial reference clip. Otherwise it is also kept. These additional clips do not become reference clips, so the final Cosmos keep count can exceed `max_keep`. Select reads the saved Cosmos embeddings and threshold from the Cosmos dedup input run; those feature files must remain available.
 
 The quick-start script uses `run_select()` in `scripts/run_pipeline_example.sh`:
 

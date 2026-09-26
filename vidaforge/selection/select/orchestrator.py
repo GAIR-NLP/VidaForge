@@ -15,6 +15,7 @@ from vidaforge.index import (
 )
 
 from .config import SelectConfig, SelectResult
+from .group import build_group_selectors
 from .worker import SelectWorker
 
 
@@ -55,6 +56,7 @@ class SelectOrchestrator:
             dedup_config=config.dedup,
             input_run_id=config.input_run_id,
             run_id=config.run_id,
+            group_selectors=build_group_selectors(config.dedup, input_path),
         )
 
         def filter_pass_rows() -> Iterable[dict[str, object]]:

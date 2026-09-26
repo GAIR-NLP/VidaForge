@@ -7,6 +7,8 @@ import math
 from vidaforge.filters import check as check_filter_rules
 from vidaforge.filters import resolve_field
 
+from .group import GroupSelector
+
 _FILTER_RULE_FIELDS = {
     "filter_ok": "filter_ok",
     "optical": "optical_score",
@@ -25,11 +27,13 @@ class SelectWorker:
         dedup_config: dict[str, dict[str, object]],
         input_run_id: str,
         run_id: str,
+        group_selectors: dict[str, GroupSelector],
     ) -> None:
         self.filter_config = filter_config
         self.dedup_config = dedup_config
         self.input_run_id = input_run_id
         self.run_id = run_id
+        self.group_selectors = group_selectors
 
         unknown_filters = sorted(set(filter_config) - set(_FILTER_RULE_FIELDS))
         if unknown_filters:
@@ -113,10 +117,18 @@ class SelectWorker:
             method_config["max_keep"] = max_keep
             self.dedup_methods[name] = method_config
 
+        missing_selectors = set(self.dedup_methods) - set(group_selectors)
+        if missing_selectors:
+            raise ValueError(f"missing group selectors: {sorted(missing_selectors)}")
+        required_score_fields = {
+            field
+            for method in self.dedup_methods
+            for field in group_selectors[method].required_score_fields
+        }
         self.score_fields = [
             _FILTER_RULE_FIELDS[name]
             for name in _SCORE_FILTERS
-            if name in self.filter_config
+            if name in self.filter_config or _FILTER_RULE_FIELDS[name] in required_score_fields
         ]
 
     def build_filter_result(self, row: dict[str, object]) -> dict[str, object]:
@@ -175,12 +187,16 @@ class SelectWorker:
         active_candidates = list(candidates)
         keep_ids_by_method: dict[str, set[str]] = {}
         summary_by_method: dict[str, dict[str, object]] = {}
+        details_by_method: dict[str, dict[str, dict[str, object]]] = {}
 
         for method, config in self.dedup_methods.items():
             group_key = f"{method}_group_id"
             keep_ids: set[str] = set()
             groups: dict[str, list[dict[str, object]]] = {}
             singleton_count = 0
+            initial_keep_count = 0
+            extra_keep_count = 0
+            details: dict[str, dict[str, object]] = {}
 
             for candidate in active_candidates:
                 group_id = str(candidate.get(group_key) or "")
@@ -203,14 +219,19 @@ class SelectWorker:
                 if max_keep is not None:
                     keep_count = min(int(max_keep), keep_count)
                 keep_count = min(len(group_candidates), keep_count)
-                keep_ids.update(
-                    str(candidate["clip_id"])
-                    for candidate in group_candidates[:keep_count]
+                selection = self.group_selectors[method].select(
+                    [str(candidate["clip_id"]) for candidate in group_candidates],
+                    keep_count,
                 )
+                keep_ids.update(selection.keep_ids)
+                details.update(selection.details)
+                initial_keep_count += keep_count
+                extra_keep_count += len(selection.keep_ids) - keep_count
 
             active_ids = {str(candidate["clip_id"]) for candidate in active_candidates}
             rejected_ids = active_ids - keep_ids
             keep_ids_by_method[method] = keep_ids
+            details_by_method[method] = details
             summary_by_method[method] = {
                 "candidate_count": len(active_candidates),
                 "singleton_count": singleton_count,
@@ -220,6 +241,8 @@ class SelectWorker:
                 "keep_ratio": config["keep_ratio"],
                 "min_keep": config["min_keep"],
                 "max_keep": config.get("max_keep"),
+                "initial_kept_count": initial_keep_count,
+                "extra_kept_count": extra_keep_count,
             }
             active_candidates = [
                 candidate
@@ -233,6 +256,7 @@ class SelectWorker:
             "final_keep_ids": {
                 str(candidate["clip_id"]) for candidate in active_candidates
             },
+            "details_by_method": details_by_method,
         }
 
     def build_select_row(
@@ -271,6 +295,7 @@ class SelectWorker:
                 group_size_field = f"{method}_group_size"
                 if group_size_field in row:
                     method_json["group_size"] = int(row.get(group_size_field) or 1)
+                method_json.update(dedup_result["details_by_method"][method].get(clip_id, {}))
                 if not method_pass:
                     select_pass = 0
                     select_reject_reason = str(config["reject_reason"])
